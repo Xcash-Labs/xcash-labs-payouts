@@ -10,7 +10,6 @@
 #include "globals.h"
 #include "macro_functions.h"
 #include "db_functions.h"
-#include "xcash_delegates.h"
 #include "net_server.h"
 #include "string_functions.h"
 #include "xcash_round.h"
