@@ -23,7 +23,7 @@ extern char* server_limit_IP_address_list; // holds all of the IP addresses that
 extern char* server_limit_public_address_list; // holds all of the public addresses that are currently running on the server.
 extern const char* xcash_net_messages[];
 extern int network_data_nodes_amount;
-extern NetworkNode network_nodes[]
+extern NetworkNode network_nodes[];
 
 void init_globals(void);
 
