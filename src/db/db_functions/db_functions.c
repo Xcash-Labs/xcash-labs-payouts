@@ -1135,6 +1135,7 @@ int compute_payouts_due(payout_output_t* parsed, uint64_t in_block_height, int64
   int rc = XCASH_OK;
   uint64_t safe_unlocked = 0;
   uint64_t sum_atomic = 0;
+  double delegate_fee_percent = 0;
 
   if (!parsed || entries_count == 0) {
     ERROR_PRINT("No parsed entries");
@@ -1404,6 +1405,11 @@ done:
 ---------------------------------------------------------------------------------------------------------*/
 int run_payout_sweep_simple(int64_t in_unlocked_balance) {
   int rc = XCASH_OK;
+  uint64_t minimum_payout = 5000;
+
+
+// need to get the minimum_payout from db
+
 
   mongoc_client_t* client = NULL;
   mongoc_collection_t* coll_bal = NULL;
