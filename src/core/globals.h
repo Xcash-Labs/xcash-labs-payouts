@@ -14,6 +14,7 @@ Global Variables
 extern mongoc_client_pool_t* database_client_thread_pool;  // database
 extern int log_level;
 extern atomic_bool shutdown_requested;
+extern atomic_bool payment_inprocess;
 extern dnssec_ctx_t* g_ctx;
 extern char xcash_wallet_public_address[XCASH_WALLET_LENGTH + 1];
 extern NetworkNode network_nodes[];
