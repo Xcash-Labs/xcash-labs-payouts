@@ -39,8 +39,6 @@ void handle_srv_message(const char* data, size_t length, server_client_t* client
     ERROR_PRINT("Message does not match expected JSON format");
     return;
   }
- 
-  xcash_msg_t msg_type = get_message_type(trans_type);
 
   // Must come from seed
   if (msg_type == XMSG_SEED_TO_NODES_PAYOUT) {
