@@ -16,6 +16,7 @@ extern int log_level;
 extern atomic_bool shutdown_requested;
 extern atomic_bool payment_inprocess;
 extern dnssec_ctx_t* g_ctx;
+extern pthread_t server_thread;
 extern char xcash_wallet_public_address[XCASH_WALLET_LENGTH + 1];
 extern NetworkNode network_nodes[];
 extern const char* endpoints[];
