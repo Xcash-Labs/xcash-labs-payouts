@@ -3,8 +3,6 @@
 
 
 #include <mongoc/mongoc.h>
-#include "crypto_vrf.h"
-#include <pthread.h>
 #include <stdatomic.h>
 #include "config.h"
 #include "macro_functions.h"
