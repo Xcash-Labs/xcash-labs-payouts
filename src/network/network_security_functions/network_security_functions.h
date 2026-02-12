@@ -21,7 +21,6 @@
 #include "network_daemon_functions.h"
 #include "network_functions.h"
 #include "string_functions.h"
-#include "node_functions.h"
 
 void handle_error(const char *function_name, const char *message, char *buf1, char *buf2, char *buf3);
 int sign_data(char *message);
