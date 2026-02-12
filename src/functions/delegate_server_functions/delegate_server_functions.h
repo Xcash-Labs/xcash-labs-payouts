@@ -15,6 +15,7 @@
 #include "xcash_payouts_loop.h"
 #include "network_daemon_functions.h"
 #include "network_wallet_functions.h"
+#include "network_security_functions.h"
 
 void server_receive_payout(const char *MESSAGE);
 
