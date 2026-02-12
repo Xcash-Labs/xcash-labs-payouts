@@ -6,6 +6,7 @@ mongoc_client_pool_t* database_client_thread_pool = NULL;
 char xcash_wallet_public_address[XCASH_WALLET_LENGTH + 1] = {0};
 int log_level = 3;  // default level is error + warning + info - change back to 2 once system stabilizes
 dnssec_ctx_t* g_ctx = NULL;
+pthread_t server_thread;
 atomic_bool shutdown_requested = ATOMIC_VAR_INIT(false);
 atomic_bool payment_inprocess = ATOMIC_VAR_INIT(false);
 int network_data_nodes_amount = 4;
