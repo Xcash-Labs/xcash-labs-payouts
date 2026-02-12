@@ -26,7 +26,6 @@ const char* xcash_net_messages[] = {
 
 // initialize the global variables
 void init_globals(void) {
-  char data[SMALL_BUFFER_SIZE];
   server_limit_IP_address_list = (char*)calloc(15728640,sizeof(char)); // 15 MB
   server_limit_public_address_list = (char*)calloc(15728640,sizeof(char)); // 15 MB
    
