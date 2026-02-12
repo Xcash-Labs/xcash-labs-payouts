@@ -15,6 +15,7 @@
 #include "net_server.h"
 #include "server_functions.h"
 #include "network_security_functions.h"
+#include "delegate_server_functions.h"
 
 void handle_srv_message(const char *data, size_t length, server_client_t* client);
 
