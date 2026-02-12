@@ -21,4 +21,5 @@ Returns:
 ---------------------------------------------------------------------------------------------------------*/
 void start_payouts_process(void) {
   // struct timeval current_time;
+  INFO_PRINT("Starting up");
 }
