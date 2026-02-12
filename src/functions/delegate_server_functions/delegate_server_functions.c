@@ -1,5 +1,23 @@
 #include "delegate_server_functions.h"
 
+// length-checked copy: JSON string -> fixed buffer
+static int json_get_string_into(cJSON* root, const char* key, char* out, size_t outsz, int required) {
+  if (!out || outsz == 0) return 0;
+  out[0] = '\0';
+  cJSON* it = cJSON_GetObjectItemCaseSensitive(root, key);
+  if (!it || !cJSON_IsString(it) || !it->valuestring) {
+    if (required) ERROR_PRINT("Missing/invalid '%s'", key);
+    return required ? 0 : 1;
+  }
+  size_t len = strlen(it->valuestring);
+  if (len >= outsz) {
+    ERROR_PRINT("Field '%s' too long (%zu >= %zu)", key, len, outsz);
+    return 0;
+  }
+  memcpy(out, it->valuestring, len + 1);
+  return 1;
+}
+
 /* --------------------------------------------------------------------------------------------------------
   Name: server_receive_payout
   Description: Runs the code when the server receives the NODE_TO_BLOCK_VERIFIERS_CHECK_VOTE_STATUS message
