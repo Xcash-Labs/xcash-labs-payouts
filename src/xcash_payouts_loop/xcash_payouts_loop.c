@@ -613,7 +613,7 @@ Parameters:
 Returns:
   None
 ---------------------------------------------------------------------------------------------------------*/
-void start_block_production(void) {
+void start_payouts_process(void) {
   struct timeval current_time;
   xcash_round_result_t round_result;
 
