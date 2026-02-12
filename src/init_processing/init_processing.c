@@ -1,5 +1,7 @@
 #include "init_processing.h"
 
+static dnssec_ctx_t* g_ctx = NULL;
+
 /*---------------------------------------------------------------------------------------------------------
 Name: print_starter_state
 Description: Print program start header.
@@ -55,28 +57,8 @@ bool print_starter_state(const arg_config_t *arg_config) {
   }
 
   if (!(count_seeds == network_data_nodes_amount)) {
-    ERROR_PRINT("Counld not validate DNSSEC records for seed nodes, unable to start");
+    ERROR_PRINT("Could not validate DNSSEC records for seed nodes, unable to start");
     return false;
-  }
-
-  // Compute our running binary digest
-  if (!get_self_sha256(self_sha)) {
-    ERROR_PRINT("Unable to compute self SHA-256");
-    return false;
-  }
-
-  char min_version[XCASH_VERSION_LENGTH + 1] = {0};
-  char allowed_sha[SHA256_DIGEST_SIZE + 1] = {0};
-  if (check_software_version(min_version, allowed_sha)) {
-    if (semver_cmp(XCASH_DPOPS_CURRENT_VERSION_NUM, min_version) < 0) {
-      ERROR_PRINT("This version is less than the minimum required version (local=%s, minimum=%s), unable to start",
-       XCASH_DPOPS_CURRENT_VERSION_NUM, min_version);
-      return false;
-    }
-    if (strcmp(self_sha, allowed_sha) != 0) {
-      WARNING_PRINT("Hash mismatch for image (local=%s, expected=%s). Please consider updating (disregard while in beta).",
-                    self_sha, allowed_sha);
-    }
   }
 
   fprintf(stderr, "[%s] Daemon startup successful and is busy processing requests...\n\n", time_str);
