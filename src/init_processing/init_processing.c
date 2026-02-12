@@ -27,7 +27,6 @@ bool print_starter_state(const arg_config_t *arg_config) {
           "%s (%s)\n\n"
           "Wallet Public Address:\t%s\n"
           "\n"
-          "Node Type:\t%s\n"
           "Services:\n"
           "Daemon:\t\t%s:%d\n"
           "DPoPS:\t\t%s:%d\n"
