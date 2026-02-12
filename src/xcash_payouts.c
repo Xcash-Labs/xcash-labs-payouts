@@ -75,29 +75,6 @@ void cleanup_data_structures(void) {
 
   // Wipe sensitive material (best-effort).
   memset(xcash_wallet_public_address, 0, sizeof(xcash_wallet_public_address));
-
-
-
-
-  memset(secret_key_data, 0, sizeof(secret_key_data));
-  memset(secret_key, 0, sizeof(secret_key));
-  // Public, but clearing is fine:
-  memset(vrf_public_key, 0, sizeof(vrf_public_key));
-  memset(sync_token, 0, sizeof(sync_token));
-
-  // Clear large globals (optional hygiene to reduce RSS before exit).
-  memset(delegates_all, 0, sizeof(delegates_all));
-  memset(delegates_timer_all, 0, sizeof(delegates_timer_all));
-  memset(&current_block_verifiers_list, 0, sizeof(current_block_verifiers_list));
-
-  memset(current_block_height, 0, sizeof(current_block_height));
-  memset(previous_block_hash, 0, sizeof(previous_block_hash));
-  memset(delegates_hash, 0, sizeof(delegates_hash));
-
-  // Destroy mutexes
-  pthread_mutex_destroy(&delegates_all_lock);
-  pthread_mutex_destroy(&current_block_verifiers_lock);
-  pthread_mutex_destroy(&producer_refs_lock);
   pthread_mutex_destroy(&database_data_IP_address_lock);
 
   return;
