@@ -574,19 +574,3 @@ bool validate_server_IP(void) {
 
   return true;
 }
-
-static bool txt_rdata_to_string(const unsigned char* rdata, size_t len, char** out_str) {
-  if (!rdata || !len || !out_str) return false;
-  char* s = (char*)malloc(len + 1);
-  if (!s) return false;
-  size_t i = 0, pos = 0;
-  while (i < len) {
-    unsigned int n = rdata[i++];
-    if (i + n > len) { free(s); return false; }
-    memcpy(s + pos, rdata + i, n);
-    pos += n; i += n;
-  }
-  s[pos] = '\0';
-  *out_str = s;
-  return true;
-}
