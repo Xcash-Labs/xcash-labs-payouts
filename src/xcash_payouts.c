@@ -181,10 +181,6 @@ int main(int argc, char *argv[]) {
     FATAL_ERROR_EXIT("Please enable ntp for your server");
   }
 
-
-char xcash_wallet_public_address[XCASH_WALLET_LENGTH + 1] = {0};
-
-
   if (!xcash_wallet_public_address || strlen(xcash_wallet_public_address) != XCASH_WALLET_LENGTH) {
     FATAL_ERROR_EXIT("The --wallet-address and should be %d characters long!", XCASH_WALLET_LENGTH);
   }
