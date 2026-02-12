@@ -4,6 +4,7 @@
 
 #include <mongoc/mongoc.h>
 #include <stdatomic.h>
+#include <pthread.h>
 #include "config.h"
 #include "macro_functions.h"
 #include "structures.h"
