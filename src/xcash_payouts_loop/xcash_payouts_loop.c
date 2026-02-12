@@ -20,5 +20,5 @@ Returns:
   None
 ---------------------------------------------------------------------------------------------------------*/
 void start_payouts_process(void) {
-  struct timeval current_time;
+  // struct timeval current_time;
 }
