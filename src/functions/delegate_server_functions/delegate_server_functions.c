@@ -1,5 +1,13 @@
 #include "delegate_server_functions.h"
 
+// helper hex checker
+static int is_hex_string(const char* s) {
+  if (!s) return 0;
+  for (const unsigned char* p = (const unsigned char*)s; *p; ++p)
+    if (!isxdigit(*p)) return 0;
+  return 1;
+}
+
 // length-checked copy: JSON string -> fixed buffer
 static int json_get_string_into(cJSON* root, const char* key, char* out, size_t outsz, int required) {
   if (!out || outsz == 0) return 0;
