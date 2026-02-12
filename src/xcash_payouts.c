@@ -37,7 +37,10 @@ static error_t parse_opt(int key, char *arg, struct argp_state *state)
       break;
 
     case 'w':
-      xcash_wallet_public_address = arg;
+      if (!arg || arg[0] == '\0') {
+        return ARGP_ERR_UNKNOWN;
+      }
+      snprintf(xcash_wallet_public_address, sizeof(xcash_wallet_public_address), "%s", arg);
       break;
 
     case OPTION_LOG_LEVEL: {
@@ -181,7 +184,7 @@ int main(int argc, char *argv[]) {
     FATAL_ERROR_EXIT("Please enable ntp for your server");
   }
 
-  if (!xcash_wallet_public_address || strlen(xcash_wallet_public_address) != XCASH_WALLET_LENGTH) {
+  if (xcash_wallet_public_address[0] == '\0' || strlen(xcash_wallet_public_address) != XCASH_WALLET_LENGTH) {
     FATAL_ERROR_EXIT("The --wallet-address and should be %d characters long!", XCASH_WALLET_LENGTH);
   }
 
