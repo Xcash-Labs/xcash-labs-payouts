@@ -7,7 +7,7 @@ char xcash_wallet_public_address[XCASH_WALLET_LENGTH + 1] = {0};
 int log_level = 3;  // default level is error + warning + info - change back to 2 once system stabilizes
 dnssec_ctx_t* g_ctx = NULL;
 atomic_bool shutdown_requested = ATOMIC_VAR_INIT(false);
-int network_data_nodes_amount = 4
+int network_data_nodes_amount = 4;
 NetworkNode network_nodes[] = {
   {"XCK1gUSXCuV4KANQz78YYFQuxeGzPwUtzToqnNGXwjFgjULzWQiYbdC9iJRPiLDqn1ijo9HpfXsDzSRjgKZAwK7x2fTAQZBLXF", "seeds.xcashseeds.us",
     "5b4a41a7018baf13484a1ecee2c8d166d9dca7ea5e570df9303a58f7d544ee15",0},
