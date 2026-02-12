@@ -1,7 +1,5 @@
 #include "init_processing.h"
 
-static dnssec_ctx_t* g_ctx = NULL;
-
 /*---------------------------------------------------------------------------------------------------------
 Name: print_starter_state
 Description: Print program start header.
