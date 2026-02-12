@@ -1,5 +1,37 @@
 #include "network_security_functions.h"
 
+// Helper function
+static bool is_local_address(const char* ip) {
+  if (!ip) return false;
+
+  // Loopback quick checks
+  if (strncmp(ip, "127.", 4) == 0) return true;  // 127.0.0.0/8
+  if (strcmp(ip, "::1") == 0) return true;
+
+  struct ifaddrs *ifaddr = NULL, *ifa = NULL;
+  if (getifaddrs(&ifaddr) != 0) return false;
+
+  bool match = false;
+  for (ifa = ifaddr; ifa; ifa = ifa->ifa_next) {
+    if (!ifa->ifa_addr) continue;
+    int family = ifa->ifa_addr->sa_family;
+    if (family != AF_INET && family != AF_INET6) continue;
+
+    char host[NI_MAXHOST];
+    if (getnameinfo(ifa->ifa_addr,
+                    (family == AF_INET) ? sizeof(struct sockaddr_in)
+                                        : sizeof(struct sockaddr_in6),
+                    host, sizeof(host), NULL, 0, NI_NUMERICHOST) == 0) {
+      if (strcmp(host, ip) == 0) {
+        match = true;
+        break;
+      }
+    }
+  }
+  freeifaddrs(ifaddr);
+  return match;
+}
+
 /*-----------------------------------------------------------------------------------------------------------
 Name: sign_txt_string
 Description:
