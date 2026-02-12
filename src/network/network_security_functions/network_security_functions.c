@@ -1,5 +1,24 @@
 #include "network_security_functions.h"
 
+bool is_seed_address(const char *public_address) {
+  for (size_t i = 0; network_nodes[i].seed_public_address != NULL; i++) {
+    if (strcmp(network_nodes[i].seed_public_address, public_address) == 0) {
+      return true;
+    }
+  }
+  return false;
+}
+
+// helper: sockaddr -> numeric string
+static int sockaddr_to_numhost(const struct sockaddr* sa, char* out, size_t outsz) {
+  if (!sa || !out || outsz == 0) return 0;
+  int rc = getnameinfo(sa,
+                       (sa->sa_family == AF_INET) ? sizeof(struct sockaddr_in)
+                                                  : sizeof(struct sockaddr_in6),
+                       out, outsz, NULL, 0, NI_NUMERICHOST);
+  return rc == 0;
+}
+
 // Helper function
 static bool is_local_address(const char* ip) {
   if (!ip) return false;
