@@ -3,6 +3,11 @@
 // set globals defined in globals.h
 
 mongoc_client_pool_t* database_client_thread_pool = NULL;
+char xcash_wallet_public_address[XCASH_WALLET_LENGTH + 1] = {0};
+
+
+
+
 pthread_t server_thread;
 dnssec_ctx_t* g_ctx = NULL;
 int log_level = 3;  // default level is error + warning + info - change back to 2 once system stabilizes
@@ -15,7 +20,7 @@ bool is_seed_node = false;
 int network_data_nodes_amount = 0;
 delegates_t delegates_all[BLOCK_VERIFIERS_TOTAL_AMOUNT] = {0};
 delegates_timer_t delegates_timer_all[BLOCK_VERIFIERS_TOTAL_AMOUNT] = {0};
-char xcash_wallet_public_address[XCASH_WALLET_LENGTH + 1] = {0};
+
 char current_block_height[BLOCK_HEIGHT_LENGTH + 1] = {0};
 char previous_block_hash[BLOCK_HASH_LENGTH + 1] = {0};
 char sync_token[SYNC_TOKEN_LEN + 1] = {0};

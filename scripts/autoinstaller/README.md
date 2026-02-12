@@ -1,1 +1,0 @@
-# xcash-scripts

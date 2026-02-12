@@ -1,38 +1,24 @@
-#include "xcash_dpops.h"
+#include "xcash_payouts.h"
 
-static bool show_help = false;
-static bool create_key = false;
 static volatile sig_atomic_t sig_requests = 0;
-
 static char doc[] =
 "\n"
 BRIGHT_WHITE_TEXT("General Options:\n")
 "Program Bug Address: https://github.com/Xcash-Labs/xcash-labs-dpops/issues\n"
 "\n"
 "  -h, --help                              List all valid parameters.\n"
-"  -k, --block-verifiers-secret-key <KEY>  Set the block verifier's secret key\n"
+"  -w, --wallet-address <ADDRESS>          Set the block verifier's secret key\n"
 "\n"
 BRIGHT_WHITE_TEXT("Debug Options:\n")
 "  --log-level                             The log-level displays log messages based on the level passed:\n"
 "                                          Critial - 0, Error - 1, Warning - 2, Info - 3, Debug - 4\n"
 "\n"
-BRIGHT_WHITE_TEXT("Website Options: (deprecated)\n")
-"  --delegates-website                    Run the delegate's website.\n"
-"  --shared-delegates-website             Run shared delegate's website with specified minimum amount.\n"
-"\n"
-BRIGHT_WHITE_TEXT("Advanced Options:\n")
-"  --generate-key                         Generate public/private key for block verifiers.\n"
-"  --quorum-bootstrap                     Ensures quorum before checking sync status, only used to start things rolling when first starting chain.\n"
-"\n"
 "For more details on each option, refer to the documentation or use the --help option.\n";
 
 static struct argp_option options[] = {
   {"help", 'h', 0, 0, "List all valid parameters.", 0},
-  {"block-verifiers-secret-key", 'k', "SECRET_KEY", 0, "Set the block verifier's secret key", 0},
+  {"wallet-address", 'w', "ADDRESS", 0, "Set the payout wallet public address", 0},
   {"log-level", OPTION_LOG_LEVEL, "LOG_LEVEL", 0, "Displays log messages based on the level passed.", 0},
-  {"delegates-website", OPTION_DELEGATES_WEBSITE, 0, 0, "Run the delegate's website.", 0},
-  {"shared-delegates-website", OPTION_SHARED_DELEGATES_WEBSITE, 0, 0, "Run shared delegate's website with specified minimum amount.", 0},
-  {"generate-key", OPTION_GENERATE_KEY, 0, 0, "Generate public/private key for block verifiers.", 0},
   {0}
 };
 
@@ -42,35 +28,32 @@ Description: Load program options.  Using the argp system calls.
 ---------------------------------------------------------------------------------------------------------*/
 static error_t parse_opt(int key, char *arg, struct argp_state *state)
 {
-  arg_config_t *arguments = state->input;
+  arg_config_t *cfg = (arg_config_t *)state->input;
+
   switch (key)
   {
-  case 'h':
-    show_help = true;
-    break;
-  case 'k':
-    arguments->block_verifiers_secret_key = arg;
-    break;
-  case OPTION_LOG_LEVEL:
-    if (atoi(arg) >= 0 && atoi(arg) <= 4)
-    {
-      log_level = atoi(arg);
-    }
-    break;
-  case OPTION_DELEGATES_WEBSITE:
-    arguments->delegates_website = true;
-    break;
-  case OPTION_SHARED_DELEGATES_WEBSITE:
-    arguments->shared_delegates_website = true;
-    break;
-  case OPTION_GENERATE_KEY:
-    create_key = true;
-    break;
-  default:
-    return ARGP_ERR_UNKNOWN;
+    case 'h':
+      cfg->show_help = true;
+      break;
+
+    case 'w':
+      xcash_wallet_public_address = arg;
+      break;
+
+    case OPTION_LOG_LEVEL: {
+      if (atoi(arg) >= 0 && atoi(arg) <= 4)
+      {
+        log_level = atoi(arg);
+      }
+      break;
+      }
+    default:
+      return ARGP_ERR_UNKNOWN;
   }
+
   return 0;
 }
+
 
 static struct argp argp = {options, parse_opt, 0, doc, NULL, NULL, NULL};
 
@@ -91,6 +74,11 @@ void cleanup_data_structures(void) {
   }
 
   // Wipe sensitive material (best-effort).
+  memset(xcash_wallet_public_address, 0, sizeof(xcash_wallet_public_address));
+
+
+
+
   memset(secret_key_data, 0, sizeof(secret_key_data));
   memset(secret_key, 0, sizeof(secret_key));
   // Public, but clearing is fine:
@@ -101,7 +89,7 @@ void cleanup_data_structures(void) {
   memset(delegates_all, 0, sizeof(delegates_all));
   memset(delegates_timer_all, 0, sizeof(delegates_timer_all));
   memset(&current_block_verifiers_list, 0, sizeof(current_block_verifiers_list));
-  memset(xcash_wallet_public_address, 0, sizeof(xcash_wallet_public_address));
+
   memset(current_block_height, 0, sizeof(current_block_height));
   memset(previous_block_hash, 0, sizeof(previous_block_hash));
   memset(delegates_hash, 0, sizeof(delegates_hash));
@@ -194,6 +182,7 @@ Return: 0 if an error has occured, 1 if successfull
 ---------------------------------------------------------------------------------------------------------*/
 int main(int argc, char *argv[]) {
   arg_config_t arg_config = {0};
+  arg_config.show_help = false;
   init_globals();
   install_signal_handlers();
   setenv("ARGP_HELP_FMT", "rmargin=120", 1);
@@ -204,13 +193,8 @@ int main(int argc, char *argv[]) {
   if (argp_parse(&argp, argc, argv, ARGP_NO_EXIT | ARGP_NO_ERRS, 0, &arg_config) != 0) {
     FATAL_ERROR_EXIT("Invalid option entered. Try `xcash-dpops --help'");
   }
-  if (show_help) {
+  if (arg_config.show_help) {
     argp_help(&argp, stdout, ARGP_NO_HELP, argv[0]);
-    return 0;
-  }
-
-  if (create_key) {
-    generate_key();
     return 0;
   }
 
@@ -220,17 +204,15 @@ int main(int argc, char *argv[]) {
     FATAL_ERROR_EXIT("Please enable ntp for your server");
   }
 
-  if (!arg_config.block_verifiers_secret_key || strlen(arg_config.block_verifiers_secret_key) != VRF_SECRET_KEY_LENGTH) {
-    FATAL_ERROR_EXIT("The --block-verifiers-secret-key is mandatory and should be %d characters long!", VRF_SECRET_KEY_LENGTH);
+
+char xcash_wallet_public_address[XCASH_WALLET_LENGTH + 1] = {0};
+
+
+  if (!xcash_wallet_public_address || strlen(xcash_wallet_public_address) != XCASH_WALLET_LENGTH) {
+    FATAL_ERROR_EXIT("The --wallet-address and should be %d characters long!", XCASH_WALLET_LENGTH);
   }
 
-  strncpy(secret_key, arg_config.block_verifiers_secret_key, sizeof(secret_key) - 1);
-  secret_key[sizeof(secret_key) - 1] = '\0';
-  if (!(hex_to_byte_array(secret_key, secret_key_data, sizeof(secret_key_data)))) {
-    FATAL_ERROR_EXIT("Failed to convert the block-verifiers-secret-key to a byte array: %s", arg_config.block_verifiers_secret_key);
-  }
-
-  if (!start_tcp_server(XCASH_DPOPS_PORT)) {
+  if (!start_tcp_server(XCASH_PAYOUTS_PORT)) {
     FATAL_ERROR_EXIT("Failed to start TCP server");
   }
 
@@ -241,54 +223,12 @@ int main(int argc, char *argv[]) {
 
   g_ctx = dnssec_init();
 
-  if (!(init_processing(&arg_config))) {
-    FATAL_ERROR_EXIT("Failed server initialization");
+  if (print_starter_state(&arg_config)) {
+    start_block_production();
   }
-
-// start the daily scheduler on seeds (ONE thread)
-  pthread_t timer_tid = 0;
-  bool sched_started = false;
-  // scheduler needs the pool; initialize_database() has created database_client_thread_pool
-  sched_ctx_t* sched_ctx = NULL;
-  sched_ctx = malloc(sizeof *sched_ctx);
-  if (is_seed_node) {
-    {
-      if (!sched_ctx) {
-        FATAL_ERROR_EXIT("Scheduler: malloc failed; can not continue without scheduled jobs");
-      } else {
-        sched_ctx->pool = database_client_thread_pool;
-        if (pthread_create(&timer_tid, NULL, timer_thread, sched_ctx) != 0) {
-          FATAL_ERROR_EXIT("Scheduler: pthread_create failed; can not continue without scheduled jobs");
-          free(sched_ctx);
-          sched_ctx = NULL;
-        } else {
-          sched_started = true;
-          INFO_PRINT("Scheduler thread started");
-        }
-      }
-    }
-  }
-
-  if (get_node_data()) {
-    if (!is_seed_node) {
-      if (get_delegate_fee(&delegate_fee_percent) == XCASH_ERROR) {
-        WARNING_PRINT("Unable to read fee from database so using default");
-      }
-    }
-    if (print_starter_state(&arg_config)) {
-      start_block_production();
-    }
-    atomic_store(&shutdown_requested, true);
-    fprintf(stderr, "Daemon is shutting down...\n");
-  } else {
-    ERROR_PRINT("Failed in call get_node_data, shutting down...");
-  }
-
-  // Signal scheduler to stop and join it
-  if (sched_started) {
-    pthread_join(timer_tid, NULL);
-    free(sched_ctx);
-  }
+  
+  atomic_store(&shutdown_requested, true);
+  fprintf(stderr, "Daemon is shutting down...\n");
 
   if (g_ctx) {
     dnssec_destroy(g_ctx);

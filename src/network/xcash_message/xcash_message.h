@@ -19,19 +19,6 @@
 #include "block_verifiers_server_functions.h"
 #include "delegate_server_functions.h"
 
-#define ARRAY_SIZE(arr) (sizeof(arr) / sizeof((arr)[0]))
-
-bool is_walletsign_type(xcash_msg_t msg);
-char* create_message_param_list(xcash_msg_t msg, const char** pair_params);
-char* create_message(xcash_msg_t msg);
-char* create_message_args(xcash_msg_t msg, va_list args);
-char* create_message_param(xcash_msg_t msg, ...);
-xcash_msg_t get_message_type(const char* data);
-
-// message format helpers
-int split(const char* str, char delimiter, char*** result_elements);
-void cleanup_char_list(char** element_list);
-
 void handle_srv_message(const char *data, size_t length, server_client_t* client);
 
 #endif  // XCASH_MESSAGE_H

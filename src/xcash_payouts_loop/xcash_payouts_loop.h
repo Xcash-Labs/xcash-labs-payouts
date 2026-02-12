@@ -1,5 +1,5 @@
-#ifndef XCASH_ROUND_H
-#define XCASH_ROUND_H
+#ifndef XCASH_PAYOUTS_LOOP_H
+#define XCASH_PAYOUTS_LOOP_H
 
 #include <stdbool.h>
 #include <time.h> 

@@ -12,7 +12,7 @@ PRINT_CURRENT_FILE = echo -ne $(COLOR_PRINT_GREEN)"\r Currently Building File" $
 endif
 
 # Binary name
-TARGET_BINARY ?= xcash-dpops
+TARGET_BINARY ?= xcash-payouts
 
 # Build directory
 BUILD_DIR ?= ./build
@@ -40,12 +40,6 @@ INC_FLAGS := $(addprefix -I,$(INC_DIRS))
 MongoDB_INC_DIRS := -I/usr/local/include/libbson-1.0 -I/usr/local/include/libmongoc-1.0
 
 # Compiler flags
-#CFLAGS ?= $(INC_FLAGS) $(MongoDB_INC_DIRS) -MMD -MP -Wall -Wextra -Wstrict-prototypes -Wcast-qual -Wfloat-equal -Wundef -Wshadow -Wcast-align -Wstrict-overflow -Wdouble-promotion -fexceptions -pie -fPIE -Wl,dynamicbase -Wl,nxcompat
-
-# Linker flags
-#LDFLAGS ?= -lmongoc-1.0 -lbson-1.0 -lresolv -lpthread -l:libcrypto.so.3 -lcurl -lcjson
-
-# Compiler flags
 CFLAGS ?= $(INC_FLAGS) $(MongoDB_INC_DIRS) -MMD -MP \
   -Wall -Wextra -Wstrict-prototypes -Wcast-qual -Wfloat-equal -Wundef -Wshadow \
   -Wcast-align -Wstrict-overflow -Wdouble-promotion \
@@ -60,7 +54,6 @@ LDFLAGS ?= -L/usr/local/lib -lmongoc-1.0 -lbson-1.0 -lresolv -lpthread -l:libcry
 # Build configurations
 debug: CFLAGS += -g -fno-stack-protector
 release: CFLAGS += -O3
-release_seed: CFLAGS += -O3 -DSEED_NODE_ON
 optimized: CFLAGS += -march=native -O3
 analyze: CFLAGS += -g -Og -fsanitize=address -fsanitize=undefined
 analyze: LDFLAGS += -fsanitize=address -fsanitize=undefined
@@ -73,12 +66,11 @@ $(BUILD_DIR)/%.o: %.c
 	@$(PRINT_CURRENT_FILE) $@
 	@$(CC) $(CFLAGS) -c $< -o $@
 
-# Ensure `debug`, `release`, and `optimized` target the same binary
-.PHONY: debug release optimized analyze analyzethreads release_seed clean
+# Ensure targets build the same binary
+.PHONY: debug release optimized analyze analyzethreads clean
 
 debug: $(BUILD_DIR)/$(TARGET_BINARY)
 release: $(BUILD_DIR)/$(TARGET_BINARY)
-release_seed: $(BUILD_DIR)/$(TARGET_BINARY)
 optimized: $(BUILD_DIR)/$(TARGET_BINARY)
 analyze: $(BUILD_DIR)/$(TARGET_BINARY)
 analyzethreads: $(BUILD_DIR)/$(TARGET_BINARY)

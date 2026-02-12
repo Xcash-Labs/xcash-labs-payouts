@@ -4,8 +4,8 @@
 #include <stdbool.h>
 
 // ===================== XCASH Version =====================
-#define XCASH_DPOPS_CURRENT_VERSION "xCash Labs DPoPs V. 2.0.0"
-#define XCASH_DPOPS_CURRENT_VERSION_NUM "2.0.0"
+#define XCASH_PAYOUTS_CURRENT_VERSION "xCash Labs Payments V. 2.0.0"
+#define XCASH_PAYOUTS_CURRENT_VERSION_NUM "2.0.0"
 #define XCASH_VERSION_LENGTH 15
 
 // ===================== Blockchain Settings =====================
@@ -20,6 +20,8 @@
 #define XCASH_DAEMON_PORT 18281
 #define XCASH_WALLET_PORT 18285
 #define XCASH_DPOPS_PORT 18283
+#define XCASH_PAYOUTS_PORT 18287
+
 #define XCASH_DAEMON_IP "127.0.0.1"
 #define XCASH_WALLET_IP "127.0.0.1"
 #define XCASH_DPOPS_IP "127.0.0.1"
