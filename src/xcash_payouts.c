@@ -224,7 +224,7 @@ char xcash_wallet_public_address[XCASH_WALLET_LENGTH + 1] = {0};
   g_ctx = dnssec_init();
 
   if (print_starter_state(&arg_config)) {
-    start_block_production();
+    start_payouts_process();
   }
   
   atomic_store(&shutdown_requested, true);
