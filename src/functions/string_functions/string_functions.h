@@ -34,7 +34,6 @@ bool decompress_gzip_with_prefix(const unsigned char* input, size_t input_len, u
 int get_random_bytes(unsigned char *buf, size_t len);
 bool base64_decode(const char* input, uint8_t* output, size_t max_output, size_t* decoded_len);
 int check_for_invalid_strings(const char* MESSAGE);
-int create_sync_token(void);
 bool str_is_base58(const char* s);
 void outputs_digest_sha256(const payout_output_t *outs, size_t n, uint8_t out32[32]);
 bool parse_updpops_entry(const char* s, updpops_entry_t* out);
