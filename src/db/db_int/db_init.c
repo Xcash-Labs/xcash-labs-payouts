@@ -4,16 +4,9 @@ bool initialize_database(void) {
   char mongo_uri[512];  // Increased buffer size for full URI
   configure_mongo_error_only_logging();
   strncpy(mongo_uri, DATABASE_CONNECTION, sizeof(mongo_uri) - 1);
-  mongo_uri[sizeof(mongo_uri) - 1] = '\0';  // Always null-terminate
-
-  if (is_seed_node) {
-    if (!initialize_mongo_database_seed(mongo_uri, &database_client_thread_pool)) {
-      return false;
-    }
-  } else {
-      if (!initialize_mongo_database(mongo_uri, &database_client_thread_pool)) {
-        return false;
-      }
+  mongo_uri[sizeof(mongo_uri) - 1] = '\0';
+  if (!initialize_mongo_database(mongo_uri, &database_client_thread_pool)) {
+    return false;
   }
 
   return true;
