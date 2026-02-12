@@ -22,6 +22,7 @@
 #include "network_functions.h"
 #include "string_functions.h"
 
+bool is_seed_address(const char* public_address);
 void handle_error(const char *function_name, const char *message, char *buf1, char *buf2, char *buf3);
 int sign_data(char *message);
 int verify_data(const char *message, xcash_msg_t msg_type);
