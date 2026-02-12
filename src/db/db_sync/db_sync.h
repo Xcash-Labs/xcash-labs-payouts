@@ -7,8 +7,6 @@
 #include "globals.h"
 #include "macro_functions.h"
 #include "db_functions.h"
-#include "xcash_net.h"
-#include "xcash_delegates.h"
 
 bool hash_delegates_collection(char *out_hash_hex);
 bool fill_delegates_from_db(void);;
