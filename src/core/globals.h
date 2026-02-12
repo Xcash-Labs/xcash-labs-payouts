@@ -16,9 +16,10 @@ extern mongoc_client_pool_t* database_client_thread_pool;  // database
 extern int log_level;
 extern atomic_bool shutdown_requested;
 extern atomic_bool payment_inprocess;
+extern atomic_bool server_running;
+extern pthread_mutex_t database_data_IP_address_lock;
 extern dnssec_ctx_t* g_ctx;
 extern pthread_t server_thread;
-extern atomic_bool server_running; 
 extern char xcash_wallet_public_address[XCASH_WALLET_LENGTH + 1];
 extern NetworkNode network_nodes[];
 extern const char* endpoints[];

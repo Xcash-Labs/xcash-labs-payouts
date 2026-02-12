@@ -10,6 +10,7 @@ pthread_t server_thread;
 atomic_bool shutdown_requested = ATOMIC_VAR_INIT(false);
 atomic_bool payment_inprocess = ATOMIC_VAR_INIT(false);
 atomic_bool server_running = ATOMIC_VAR_INIT(true);
+pthread_mutex_t database_data_IP_address_lock = PTHREAD_MUTEX_INITIALIZER;
 int network_data_nodes_amount = 4;
 NetworkNode network_nodes[] = {
   {"XCK1gUSXCuV4KANQz78YYFQuxeGzPwUtzToqnNGXwjFgjULzWQiYbdC9iJRPiLDqn1ijo9HpfXsDzSRjgKZAwK7x2fTAQZBLXF", "seeds.xcashseeds.us",
