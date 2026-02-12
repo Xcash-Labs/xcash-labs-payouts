@@ -13,11 +13,6 @@ void server_receive_payout(const char* MESSAGE) {
     return;
   }
 
-  if(is_seed_node) {
-    ERROR_PRINT("server_receive_payout: Seed nodes should never recieve a server_receive_payout transaction");
-    return;
-  }
-
   cJSON* root = cJSON_Parse(MESSAGE);
   if (!root) {
     const char* ep = cJSON_GetErrorPtr();
