@@ -23,10 +23,6 @@
 #include "string_functions.h"
 
 bool is_seed_address(const char* public_address);
-void handle_error(const char *function_name, const char *message, char *buf1, char *buf2, char *buf3);
-int sign_data(char *message);
-int verify_data(const char *message, xcash_msg_t msg_type);
-int verify_action_data(const char *message, const char *client_ip, xcash_msg_t msg_type);
 int verify_the_ip(const char *message, const char *client_ip, bool seed_only);
 bool sign_txt_string(const char* txt_string, char* signature_out, size_t sig_out_len);
 int wallet_verify_signature(const char *sign_str, const char *in_public_address, const char *in_signature);
@@ -34,7 +30,5 @@ dnssec_ctx_t* dnssec_init(void);
 void dnssec_destroy(dnssec_ctx_t* h);
 dnssec_status_t dnssec_query(dnssec_ctx_t* h, const char* name, int rrtype, bool* out_havedata);
 bool validate_server_IP(void);
-bool get_banned_delegates(void);
-bool check_software_version(char* min_version, char* allowed_sha);
 
 #endif
