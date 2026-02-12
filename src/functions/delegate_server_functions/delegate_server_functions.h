@@ -12,7 +12,7 @@
 #include "db_functions.h"
 #include "net_server.h"
 #include "string_functions.h"
-#include "xcash_round.h"
+#include "xcash_payouts_loop.h"
 #include "network_daemon_functions.h"
 #include "network_wallet_functions.h"
 
