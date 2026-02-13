@@ -30,5 +30,6 @@ dnssec_ctx_t* dnssec_init(void);
 void dnssec_destroy(dnssec_ctx_t* h);
 dnssec_status_t dnssec_query(dnssec_ctx_t* h, const char* name, int rrtype, bool* out_havedata);
 bool validate_server_IP(void);
+int verify_data(const char* message, xcash_msg_t msg_type);
 
 #endif
