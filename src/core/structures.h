@@ -5,7 +5,7 @@
 
 typedef struct {
   bool show_help;
-  char *block_verifiers_secret_key;
+//  char *block_verifiers_secret_key;
 } arg_config_t;
 
 // Define a struct to store network node data
@@ -22,6 +22,7 @@ typedef struct {
 } updpops_entry_t;
 
 // xcash-next
+/*
 typedef struct  {
     char public_address[XCASH_WALLET_LENGTH+1];
     uint64_t total_vote_count;
@@ -40,28 +41,29 @@ typedef struct  {
     char verifiers_vrf_proof_hex[VRF_PROOF_LENGTH + 1];
     char verifiers_vrf_beta_hex[VRF_BETA_LENGTH + 1];
 } delegates_t;
+*/
 
-typedef struct {
-    char public_address[XCASH_WALLET_LENGTH+1];
-    char IP_address[IP_LENGTH+1];
-} delegates_timer_t;
+//typedef struct {
+//    char public_address[XCASH_WALLET_LENGTH+1];
+//    char IP_address[IP_LENGTH+1];
+//} delegates_timer_t;
 
 typedef struct {
   mongoc_client_pool_t *pool;
 } sched_ctx_t;
 
-typedef struct {
-    char block_verifiers_name[BLOCK_VERIFIERS_AMOUNT][MAXIMUM_BUFFER_SIZE_DELEGATES_NAME+1]; // The block verifiers name
-    char block_verifiers_public_address[BLOCK_VERIFIERS_AMOUNT][XCASH_WALLET_LENGTH+1]; // The block verifiers public address
-    char block_verifiers_public_key[BLOCK_VERIFIERS_AMOUNT][VRF_PUBLIC_KEY_LENGTH+1]; // The block verifiers public key
-    char block_verifiers_IP_address[BLOCK_VERIFIERS_AMOUNT][IP_LENGTH+1]; // The block verifiers IP address
-    char block_verifiers_vrf_proof_hex[BLOCK_VERIFIERS_AMOUNT][VRF_PROOF_LENGTH + 1];
-    char block_verifiers_vrf_beta_hex[BLOCK_VERIFIERS_AMOUNT][VRF_BETA_LENGTH + 1];
-    int block_verifiers_vote_total[BLOCK_VERIFIERS_AMOUNT];
-    uint8_t block_verifiers_voted[BLOCK_VERIFIERS_AMOUNT];
-    char block_verifiers_vote_signature[BLOCK_VERIFIERS_AMOUNT][XCASH_SIGN_DATA_LENGTH + 1];
-    char block_verifiers_selected_public_address[BLOCK_VERIFIERS_AMOUNT][XCASH_WALLET_LENGTH+1];
-} block_verifiers_list_t;
+//typedef struct {
+//    char block_verifiers_name[BLOCK_VERIFIERS_AMOUNT][MAXIMUM_BUFFER_SIZE_DELEGATES_NAME+1]; // The block verifiers name
+//    char block_verifiers_public_address[BLOCK_VERIFIERS_AMOUNT][XCASH_WALLET_LENGTH+1]; // The block verifiers public address
+//    char block_verifiers_public_key[BLOCK_VERIFIERS_AMOUNT][VRF_PUBLIC_KEY_LENGTH+1]; // The block verifiers public key
+//    char block_verifiers_IP_address[BLOCK_VERIFIERS_AMOUNT][IP_LENGTH+1]; // The block verifiers IP address
+//    char block_verifiers_vrf_proof_hex[BLOCK_VERIFIERS_AMOUNT][VRF_PROOF_LENGTH + 1];
+//    char block_verifiers_vrf_beta_hex[BLOCK_VERIFIERS_AMOUNT][VRF_BETA_LENGTH + 1];
+//    int block_verifiers_vote_total[BLOCK_VERIFIERS_AMOUNT];
+//    uint8_t block_verifiers_voted[BLOCK_VERIFIERS_AMOUNT];
+//    char block_verifiers_vote_signature[BLOCK_VERIFIERS_AMOUNT][XCASH_SIGN_DATA_LENGTH + 1];
+//    char block_verifiers_selected_public_address[BLOCK_VERIFIERS_AMOUNT][XCASH_WALLET_LENGTH+1];
+//} block_verifiers_list_t;
 
 typedef enum {
     XMSG_BLOCK_VERIFIERS_TO_BLOCK_VERIFIERS_VRF_DATA,
