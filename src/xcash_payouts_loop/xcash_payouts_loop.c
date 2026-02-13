@@ -20,7 +20,7 @@ Returns:
   None
 ---------------------------------------------------------------------------------------------------------*/
 void start_payouts_process(void) {
-  INFO_PRINT("xcash-payoutd starting");
+  INFO_PRINT("xcash-payouts starting");
 
   while (!atomic_load(&shutdown_requested)) {
     sleep(60);
