@@ -229,6 +229,82 @@ int verify_the_ip(const char* message, const char* client_ip, bool seed_only) {
 }
 
 /*---------------------------------------------------------------------------------------------------------
+ * Name: verify_data
+ * Description:
+ *   Verifies the authenticity and integrity of signed messages within the DPoPS protocol.
+ *   Supports wallet-based JSON-RPC signatures.
+ *
+ * Parameters:
+ *   message - The complete signed message (in JSON or delimited format).
+ *
+ * Return:
+ *   0 if the signed data is not verified, 1 if successfull
+---------------------------------------------------------------------------------------------------------*/
+int verify_data(const char* message, xcash_msg_t msg_type) {
+  const char* HTTP_HEADERS[] = {"Content-Type: application/json", "Accept: application/json"};
+  const size_t HTTP_HEADERS_LENGTH = sizeof(HTTP_HEADERS) / sizeof(HTTP_HEADERS[0]);
+
+  char data[SMALL_BUFFER_SIZE] = {0};
+  char signature[XCASH_SIGN_DATA_LENGTH + 1] = {0};
+  char ck_public_address[XCASH_WALLET_LENGTH + 1] = {0};
+  char raw_data[MEDIUM_BUFFER_SIZE] = {0};
+  char request[MEDIUM_BUFFER_SIZE * 2] = {0};
+  char response[MEDIUM_BUFFER_SIZE] = {0};
+
+  // Extract all required fields
+  if (parse_json_data(message, "XCASH_DPOPS_signature", signature, sizeof(signature)) != 1 ||
+      parse_json_data(message, "public_address", ck_public_address, sizeof(ck_public_address)) != 1) {
+    ERROR_PRINT("verify_data: Failed to parse one or more required fields."); 
+    return XCASH_ERROR;
+  }
+
+  snprintf(data, sizeof(data), "{\"public_address\":\"%s\"}", ck_public_address);
+  if (count_documents_in_collection(DATABASE_NAME, DB_COLLECTION_DELEGATES, data) == 0) {
+    WARNING_PRINT("The delegates public address in this transaction does not exist");
+    return XCASH_ERROR;
+  }
+
+  snprintf(raw_data, sizeof(raw_data), "%s", message);
+
+  char* sig_pos = strstr(raw_data, ",\"XCASH_DPOPS_signature\"");
+  if (sig_pos) {
+    *sig_pos = '}';         // Replace start of signature field with closing brace
+    *(sig_pos + 1) = '\0';  // Null-terminate the string
+  } else {
+    ERROR_PRINT("Signature field not found.");
+    return XCASH_ERROR;
+  }
+
+  char escaped[MEDIUM_BUFFER_SIZE] = {0};
+  strncpy(escaped, raw_data, MEDIUM_BUFFER_SIZE);
+  string_replace(escaped, MEDIUM_BUFFER_SIZE, "\"", "\\\"");
+
+  // Prepare wallet verify request
+  snprintf(request, sizeof(request),
+           "{\"jsonrpc\":\"2.0\",\"id\":\"0\",\"method\":\"verify\",\"params\":{"
+           "\"data\":\"%s\","
+           "\"address\":\"%s\","
+           "\"signature\":\"%s\"}}",
+           escaped, ck_public_address, signature);
+
+  if (send_http_request(response, sizeof(response), XCASH_WALLET_IP, "/json_rpc", XCASH_WALLET_PORT,
+                        "POST", HTTP_HEADERS, HTTP_HEADERS_LENGTH,
+                        request, HTTP_TIMEOUT_SETTINGS) <= 0) {
+    ERROR_PRINT("verify_data: HTTP request failed");
+    return XCASH_ERROR;
+  }
+
+  // Parse response
+  char result[8] = {0};
+  if (parse_json_data(response, "result.good", result, sizeof(result)) == 1 && strcmp(result, "true") == 0) {
+    return XCASH_OK;
+  }
+
+  WARNING_PRINT("Signature verification failed for transaction");
+  return XCASH_ERROR;
+}
+
+/*---------------------------------------------------------------------------------------------------------
  * Name: wallet_verify_signature
  *
  * Description:

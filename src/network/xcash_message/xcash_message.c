@@ -55,14 +55,28 @@ void handle_srv_message(const char* data, size_t length, server_client_t* client
   xcash_msg_t msg_type = get_message_type(trans_type);
 
   // Must come from seed
-  if (msg_type == XMSG_SEED_TO_NODES_PAYOUT) {
+  if (msg_type == XMSG_SEED_TO_NODES_UPDATE_VOTE_COUNT || msg_type == XMSG_SEED_TO_NODES_PAYOUT) {
     if (verify_the_ip(data, client->client_ip, true) != XCASH_OK) {
       ERROR_PRINT("IP seed check failed for msg_type=%s from %s", trans_type, client->client_ip);
       return;
     }
   }
 
+  // Check if message is signed
+  if (msg_type == XMSG_SEED_TO_NODES_UPDATE_VOTE_COUNT) {
+    if (verify_data(data, msg_type) == XCASH_ERROR) {
+      return;
+    }
+  }
+
   switch (msg_type) {
+
+    case XMSG_SEED_TO_NODES_UPDATE_VOTE_COUNT:
+      if (server_limit_IP_addresses(LIMIT_CHECK, client->client_ip) == 1) {
+        server_receive_update_delegate_vote_count(data);
+        server_limit_IP_addresses(LIMIT_REMOVE, client->client_ip);
+      }
+      break;
 
     case XMSG_SEED_TO_NODES_PAYOUT: {
       // Should always be false but just in case

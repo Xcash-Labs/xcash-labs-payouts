@@ -17,5 +17,6 @@
 #include "network_wallet_functions.h"
 
 void server_receive_payout(const char *MESSAGE);
+void server_receive_update_delegate_vote_count(const char* MESSAGE);
 
 #endif
