@@ -20,6 +20,10 @@ Returns:
   None
 ---------------------------------------------------------------------------------------------------------*/
 void start_payouts_process(void) {
-  // struct timeval current_time;
-  INFO_PRINT("Starting up");
+  INFO_PRINT("xcash-payoutd starting");
+
+  while (!atomic_load(&shutdown_requested)) {
+    sleep(60);
+  }
+
 }
