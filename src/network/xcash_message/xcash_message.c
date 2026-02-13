@@ -64,7 +64,7 @@ void handle_srv_message(const char* data, size_t length, server_client_t* client
 
   // Check if message is signed
   if (msg_type == XMSG_SEED_TO_NODES_UPDATE_VOTE_COUNT) {
-    if (verify_data(data, msg_type) == XCASH_ERROR) {
+    if (verify_data(data) == XCASH_ERROR) {
       return;
     }
   }

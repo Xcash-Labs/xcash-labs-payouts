@@ -240,7 +240,7 @@ int verify_the_ip(const char* message, const char* client_ip, bool seed_only) {
  * Return:
  *   0 if the signed data is not verified, 1 if successfull
 ---------------------------------------------------------------------------------------------------------*/
-int verify_data(const char* message, xcash_msg_t msg_type) {
+int verify_data(const char* message) {
   const char* HTTP_HEADERS[] = {"Content-Type: application/json", "Accept: application/json"};
   const size_t HTTP_HEADERS_LENGTH = sizeof(HTTP_HEADERS) / sizeof(HTTP_HEADERS[0]);
 
