@@ -129,7 +129,7 @@ int send_http_request(char *result, size_t return_buffer_size, const char *host,
     snprintf(full_url, sizeof(full_url), "http://%s:%d%s", host, port, url);
     DEBUG_PRINT("Making HTTP request to URL: %s", full_url);
     curl_easy_setopt(curl, CURLOPT_URL, full_url);
-    curl_easy_setopt(curl, CURLOPT_CONNECTTIMEOUT, 15L); // seconds
+    curl_easy_setopt(curl, CURLOPT_CONNECTTIMEOUT, 10L); // seconds
     curl_easy_setopt(curl, CURLOPT_TIMEOUT, timeout);
     curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_callback);
     curl_easy_setopt(curl, CURLOPT_WRITEDATA, &response);
