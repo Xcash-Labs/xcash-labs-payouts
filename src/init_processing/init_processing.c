@@ -40,7 +40,7 @@ bool print_starter_state(const arg_config_t *arg_config) {
           XCASH_DAEMON_IP, XCASH_DAEMON_PORT,
           XCASH_DPOPS_IP, XCASH_DPOPS_PORT,
           XCASH_WALLET_IP, XCASH_WALLET_PORT,
-          XCASH_PAYOUTS_IP, XCASH_WALLET_PORT,
+          XCASH_PAYOUTS_IP, XCASH_PAYOUTS_PORT,
           DATABASE_CONNECTION, log_level, self_sha);
 
 //
