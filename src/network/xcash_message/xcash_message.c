@@ -54,6 +54,8 @@ void handle_srv_message(const char* data, size_t length, server_client_t* client
  
   xcash_msg_t msg_type = get_message_type(trans_type);
 
+  INFO_PRINT("Parsed message_settings='%s' -> msg_type=%d", trans_type, (int)msg_type);
+
   // Must come from seed
   if (msg_type == XMSG_SEED_TO_NODES_PAYOUT) {
     if (verify_the_ip(data, client->client_ip, true) != XCASH_OK) {
