@@ -1382,6 +1382,29 @@ done:
   return rc;
 }
 
+// helper to get the minimum payment threshold 
+static int get_delegate_minimum_amount(int64_t *out_min_amount)
+{
+  if (!out_min_amount) return XCASH_ERROR;
+  char filter_json[256] = {0};
+  *out_min_amount = 0;
+  snprintf(filter_json, sizeof(filter_json),
+           "{ \"public_address\": \"%s\" }",
+           xcash_wallet_public_address);
+  if (read_document_int64_field_from_collection(
+        DATABASE_NAME,
+        DB_COLLECTION_DELEGATES,
+        filter_json,
+        "minimum_amount",
+        out_min_amount) != XCASH_OK)
+  {
+    *out_min_amount = 0;
+    return XCASH_ERROR;
+  }
+
+  return XCASH_OK;
+}
+
 /*---------------------------------------------------------------------------------------------------------
  * run_payout_sweep_simple
  *
@@ -1405,11 +1428,17 @@ done:
 ---------------------------------------------------------------------------------------------------------*/
 int run_payout_sweep_simple(int64_t in_unlocked_balance) {
   int rc = XCASH_OK;
-  uint64_t minimum_payout = 5000;
+  int64_t minimum_payout = 0;
 
-
-// need to get the minimum_payout from db
-
+  if (get_delegate_minimum_amount(&minimum_payout) == XCASH_OK) {
+    if (minimum_payout <= 0) {
+      minimum_payout = 5000;
+      WARNING_PRINT("Minimum_amount value is zero, using default");
+    }
+  } else {
+    minimum_payout = 5000;
+    WARNING_PRINT("Failed to retrieve minimum_amount value from collection, using default");
+  }
 
   mongoc_client_t* client = NULL;
   mongoc_collection_t* coll_bal = NULL;
