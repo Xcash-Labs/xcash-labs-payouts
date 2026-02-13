@@ -31,7 +31,7 @@ bool print_starter_state(const arg_config_t *arg_config) {
           "Daemon:\t\t%s:%d\n"
           "DPoPS:\t\t%s:%d\n"
           "Wallet:\t\t%s:%d\n"
-          "Payouts:\t\t%s:%d\n"
+          "Payouts:\t%s:%d\n"
           "MongoDB:\t%s\n"
           "Log level:\t%d\n"
           "Image Hash:\t%s\n",
