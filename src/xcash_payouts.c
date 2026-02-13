@@ -91,7 +91,7 @@ void sigint_handler(int sig_num) {
  (void)sig_num;
   sig_requests++;
   if (sig_requests == 1) {
-    static const char msg[] = "\nShutdown request received. Finishing current round, please wait...\n";
+    static const char msg[] = "\nShutdown request received. Finishing current transaction, please wait...\n";
     if (write(STDERR_FILENO, msg, sizeof(msg) - 1) < 0) { /* ignore */ }
   }
   atomic_store(&shutdown_requested, true);
