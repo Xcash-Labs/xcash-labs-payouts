@@ -65,14 +65,6 @@ void server_receive_payout(const char* MESSAGE) {
     cJSON_Delete(root);
     return;
   }
-  
-  INFO_PRINT("[PAYOUT] height=%s entries=%zu outputs_hash=%s",
-            in_block_height, outputs_count, in_outputs_hash);
-
-  for (size_t i = 0; i < outputs_count; i++) {
-    INFO_PRINT("[PAYOUT] output[%zu/%zu] a=%s v=%" PRIu64,
-              i + 1, outputs_count, outputs[i].a, outputs[i].v);
-  }
 
   uint64_t in_num_block_height = strtoull(in_block_height, NULL, 10);
   uint64_t conf = (uint64_t)(CRYPTONOTE_MINED_MONEY_UNLOCK_WINDOW + SAFE_CONFIRMATION_MARGIN);
@@ -296,6 +288,14 @@ void server_receive_payout(const char* MESSAGE) {
     free(parsed);
     free(sign_str);
     return;
+  }
+
+  INFO_PRINT("[PAYOUT] SEED_TO_NODES_PAYOUT VERIFIED | height=%s | delegate=%s | entries=%zu | outputs_hash=%s",
+            in_block_height, in_delegate_wallet_address, entries_count, in_outputs_hash);
+
+  for (size_t k = 0; k < entries_count; k++) {
+    INFO_PRINT("[PAYOUT] output[%zu/%zu] a=%s v=%" PRIu64,
+              k + 1, entries_count, parsed[k].a, parsed[k].v);
   }
 
   uint64_t unlocked = 0;
