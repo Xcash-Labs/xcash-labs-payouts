@@ -1375,7 +1375,7 @@ done:
   if (client) mongoc_client_pool_push(database_client_thread_pool, client);
 
   if (rc == XCASH_OK && sum_atomic > 0 && sum_atomic <= safe_unlocked) {
-    INFO_PRINT("compute_payouts_due: Computed Payouts: Total=%.6f XCK",
+    INFO_PRINT("compute_payouts_due: Computed Payouts: Total ammout to be paid out for this payout sweep=%.6f XCK",
                (double)sum_atomic / (double)XCASH_ATOMIC_UNITS);
   }
 
@@ -1551,9 +1551,11 @@ int run_payout_sweep_simple(int64_t in_unlocked_balance) {
     bson_destroy(&proj);
   }
 
-  INFO_PRINT("run_payout_sweep_simple: total pending (eligible)=%" PRId64
-             " unlocked=%" PRIu64,
-             total_pending_atomic, unlocked);
+  INFO_PRINT(
+    "payout sweep: total pending owed to all stakers = %.6f XCK | available to pay (unlocked) = %.6f XCK",
+    (double)total_pending_atomic / (double)XCASH_ATOMIC_UNITS,
+    (double)unlocked / (double)XCASH_ATOMIC_UNITS
+  );
 
   // ---- Fairness guard: require enough unlocked to clear all eligible pending ----
   if (total_pending_atomic < 0) {
@@ -1672,9 +1674,21 @@ int run_payout_sweep_simple(int64_t in_unlocked_balance) {
                                      &fee, &ts, &amt_sent,
                                      split_siblings, MAX_SIBLINGS, &split_siblings_count);
     if (send_ok == XCASH_ERROR) {
+      if (amt_sent > 0) {
+        // Request reached wallet but response failed → may have sent
+        ERROR_PRINT("run_payout_sweep_simple: payout likely sent but response failed for %s amount=%" PRId64, addr, pend);
+        ERROR_PRINT("Zeroing pending to prevent double-payment");
+        goto zero_pending;
+      }
+
+      // True failure (never reached wallet)
       ERROR_PRINT("run_payout_sweep_simple: payout failed for %s amount=%" PRId64, addr, pend);
-      rc = XCASH_ERROR;
       goto done;
+    }
+
+    if (first_hash[0] == '\0' || strcmp(first_hash, "unknown") == 0) {
+      ERROR_PRINT("run_payout_sweep_simple: missing txid for %s; skipping receipt insert", addr);
+      goto zero_pending;
     }
 
     // --- Insert payment record ---
@@ -1705,17 +1719,24 @@ int run_payout_sweep_simple(int64_t in_unlocked_balance) {
         ERROR_PRINT("run_payout_sweep_simple: payment insert failed for %s (tx=%s): %s",
                     addr, first_hash, err.message);
         bson_destroy(&pay_doc);
-        rc = XCASH_ERROR;
-        goto done;
+        // Do NOT goto done; continue to clear pending to prevent double-pay
+        goto zero_pending;
       }
 
-      INFO_PRINT("run_payout_sweep_simple:: _id=%s split=%zu fee=%" PRIu64 " sent=%" PRIu64,
-                 first_hash, split_siblings_count, fee, (uint64_t)amt_sent);
+      INFO_PRINT(
+        "payout sent: address=%s | tx=%s | amount=%.6f XCK | fee=%.6f XCK | splits=%zu",
+        addr,
+        first_hash,
+        (double)amt_sent / (double)XCASH_ATOMIC_UNITS,
+        (double)fee / (double)XCASH_ATOMIC_UNITS,
+        split_siblings_count
+      );
 
       bson_destroy(&pay_doc);
     }
 
     // --- Zero or delete source record ---
+zero_pending:
     {
       bson_error_t err;
       bool ok = false;
@@ -1749,9 +1770,20 @@ int run_payout_sweep_simple(int64_t in_unlocked_balance) {
 
     }
 
-    INFO_PRINT("run_payout_sweep_simple: requested=%" PRId64 " sent=%" PRIu64 " to %s (%s); %s [tx=%s fee=%" PRIu64 "]",
-           pend, (uint64_t)amt_sent, addr, reason,
-           delete_after ? "deleted" : "zeroed", first_hash, fee);
+      if (first_hash[0] == '\0') {
+        snprintf(first_hash, sizeof(first_hash), "unknown");
+      }
+      INFO_PRINT(
+        "payout sweep: addr=%s | req=%.6f XCK | sent=%.6f XCK | fee=%.6f XCK | splits=%zu | %s | tx=%s | reason=%s",
+        addr,
+        (double)pend / (double)XCASH_ATOMIC_UNITS,
+        (double)amt_sent / (double)XCASH_ATOMIC_UNITS,
+        (double)fee / (double)XCASH_ATOMIC_UNITS,
+        split_siblings_count,
+        delete_after ? "deleted" : "zeroed",
+        first_hash,
+        reason);
+     
   }
 
   if (mongoc_cursor_error(cur, NULL)) {
@@ -1847,7 +1879,7 @@ int mark_found_blocks_processed_up_to(uint64_t height)
   else if (bson_iter_init_find(&it, &reply, "nModified") && BSON_ITER_HOLDS_INT32(&it))
     n = bson_iter_int32(&it);
 
-  INFO_PRINT("mark_found_blocks_processed_up_to: marked %" PRIi64 " found_blocks as processed", n);
+  INFO_PRINT("mark_found_blocks_processed_up_to: marked %" PRIi64 " found_blocks as processed for this payout sweep", n);
 
   bson_destroy(&reply);
   bson_destroy(&update);

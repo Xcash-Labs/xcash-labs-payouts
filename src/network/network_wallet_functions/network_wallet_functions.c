@@ -401,11 +401,26 @@ int wallet_payout_send(const char* addr, int64_t amount_atomic, const char* reas
 
   // Send
   char response[BUFFER_SIZE] = {0};
+  int http_request_succeeded = 0;
   if (send_http_request(response, sizeof(response),
                         XCASH_WALLET_IP, "/json_rpc", XCASH_WALLET_PORT, "POST",
                         HTTP_HEADERS, HTTP_HEADERS_LENGTH,
-                        request, SEND_PAYMENT_TIMEOUT_SETTINGS) != XCASH_OK) {
-    ERROR_PRINT("wallet_payout_send: HTTP error");
+                        request, SEND_PAYMENT_TIMEOUT_SETTINGS, &http_request_succeeded) != XCASH_OK) {
+
+    if (!http_request_succeeded) {
+      // Request never reached wallet → nothing sent
+      ERROR_PRINT("wallet_payout_send: HTTP request failed before reaching wallet");
+      return XCASH_ERROR;
+    }
+
+    // Request reached wallet but response unusable → may have sent
+    ERROR_PRINT("wallet_payout_send: HTTP response error but request reached wallet");
+
+    // Tell caller to assume funds may have been sent
+    if (amount_sent_out) *amount_sent_out = amount_atomic;
+    if (first_tx_hash_out && first_tx_hash_out_len)
+      snprintf(first_tx_hash_out, first_tx_hash_out_len, "unknown");
+
     return XCASH_ERROR;
   }
 

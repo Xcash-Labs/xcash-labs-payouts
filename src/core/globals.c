@@ -23,7 +23,6 @@ NetworkNode network_nodes[] = {
     "63e71eb7c7152b4f27435925a489849680daf067e13631de647249d186062416",0},
   // Sentinel value (empty entry to mark the end)
   {NULL, NULL, NULL, 0}};
-char self_sha[SHA256_DIGEST_SIZE + 1] = {0};
 char* server_limit_IP_address_list;
 char* server_limit_public_address_list;
 const char* xcash_net_messages[] = {

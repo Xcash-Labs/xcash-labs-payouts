@@ -294,7 +294,7 @@ void server_receive_payout(const char* MESSAGE) {
             in_block_height, in_delegate_wallet_address, entries_count, in_outputs_hash);
 
   for (size_t k = 0; k < entries_count; k++) {
-    INFO_PRINT("[PAYOUT] output[%zu/%zu] a=%s v=%" PRIu64,
+    INFO_PRINT("[PAYOUT] output[%zu/%zu] address=%s votes=%" PRIu64,
               k + 1, entries_count, parsed[k].a, parsed[k].v);
   }
 
@@ -306,7 +306,7 @@ void server_receive_payout(const char* MESSAGE) {
     return;
   }
 
-  INFO_PRINT("server_receive_payout: Unlocked balance: %" PRIu64 " atomic (%.6f XCK)", unlocked,
+  INFO_PRINT("server_receive_payout: Unlocked balance for delegate wallet: %" PRIu64 " atomic (%.6f XCK)", unlocked,
     (double)unlocked / (double)XCASH_ATOMIC_UNITS);
   if(compute_payouts_due(parsed, pass_block_height, unlocked, entries_count) == XCASH_ERROR) {
     ERROR_PRINT("compute_payout_due failed");

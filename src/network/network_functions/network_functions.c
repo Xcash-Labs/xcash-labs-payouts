@@ -93,108 +93,105 @@ Parameters:
 
   Return: 0 if an error has occured, 1 if successfull
 ---------------------------------------------------------------------------------------------------------*/
-int send_http_request(char *result, size_t return_buffer_size, const char *host, const char *url, int port,
-                      const char *method, const char **headers, size_t headers_length,
-                      const char *data, int timeout)
-{
-    CURL *curl;
-    CURLcode res;
-    struct curl_slist *header_list = NULL;
+int send_http_request(char* result, size_t return_buffer_size, const char* host, const char* url, int port,
+                      const char* method, const char** headers, size_t headers_length,
+                      const char* data, int timeout, int* http_request_succeeded) {
+                        
+  if (http_request_succeeded) *http_request_succeeded = 0;
+  CURL* curl;
+  CURLcode res;
+  struct curl_slist* header_list = NULL;
 
-    // Initialize the response buffer
-    ResponseBuffer response = {malloc(1), 0};
-    if (!response.data) {
-        ERROR_PRINT("Memory allocation failed");
-        return XCASH_ERROR;
-    }
-    response.data[0] = '\0';
+  // Initialize the response buffer
+  ResponseBuffer response = {malloc(1), 0};
+  if (!response.data) {
+    ERROR_PRINT("Memory allocation failed");
+    return XCASH_ERROR;
+  }
+  response.data[0] = '\0';
 
-    curl = curl_easy_init();
-    if (!curl)
-    {
-        ERROR_PRINT("Failed to initialize libcurl");
-        free(response.data);
-        return XCASH_ERROR;
-    }
+  curl = curl_easy_init();
+  if (!curl) {
+    ERROR_PRINT("Failed to initialize libcurl");
+    free(response.data);
+    return XCASH_ERROR;
+  }
 
-    if (!result || return_buffer_size == 0) {
-        ERROR_PRINT("Invalid result buffer");
-        free(response.data);
-        curl_easy_cleanup(curl);
-        return XCASH_ERROR;
-    }
+  if (!result || return_buffer_size == 0) {
+    ERROR_PRINT("Invalid result buffer");
+    free(response.data);
+    curl_easy_cleanup(curl);
+    return XCASH_ERROR;
+  }
 
-    // Construct full URL
-    char full_url[256];
-    snprintf(full_url, sizeof(full_url), "http://%s:%d%s", host, port, url);
-    DEBUG_PRINT("Making HTTP request to URL: %s", full_url);
-    curl_easy_setopt(curl, CURLOPT_URL, full_url);
-    curl_easy_setopt(curl, CURLOPT_CONNECTTIMEOUT, 10L); // seconds
-    curl_easy_setopt(curl, CURLOPT_TIMEOUT, timeout);
-    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_callback);
-    curl_easy_setopt(curl, CURLOPT_WRITEDATA, &response);
-    curl_easy_setopt(curl, CURLOPT_NOSIGNAL, 1L);
+  // Construct full URL
+  char full_url[256];
+  snprintf(full_url, sizeof(full_url), "http://%s:%d%s", host, port, url);
+  DEBUG_PRINT("Making HTTP request to URL: %s", full_url);
+  curl_easy_setopt(curl, CURLOPT_URL, full_url);
+  curl_easy_setopt(curl, CURLOPT_CONNECTTIMEOUT, 10L);  // seconds
+  curl_easy_setopt(curl, CURLOPT_TIMEOUT, timeout);
+  curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_callback);
+  curl_easy_setopt(curl, CURLOPT_WRITEDATA, &response);
+  curl_easy_setopt(curl, CURLOPT_NOSIGNAL, 1L);
 
-    // Handle HTTP headers
-    for (size_t i = 0; i < headers_length; i++)
-    {
-        header_list = curl_slist_append(header_list, headers[i]);
-    }
-    curl_easy_setopt(curl, CURLOPT_HTTPHEADER, header_list);
+  // Handle HTTP headers
+  for (size_t i = 0; i < headers_length; i++) {
+    header_list = curl_slist_append(header_list, headers[i]);
+  }
+  curl_easy_setopt(curl, CURLOPT_HTTPHEADER, header_list);
 
-    // Handle HTTP method
-    if (strcmp(method, "POST") == 0)
-    {
-        curl_easy_setopt(curl, CURLOPT_POST, 1L);
-        curl_easy_setopt(curl, CURLOPT_POSTFIELDS, data ? data : "");
-    }
+  // Handle HTTP method
+  if (strcmp(method, "POST") == 0) {
+    curl_easy_setopt(curl, CURLOPT_POST, 1L);
+    curl_easy_setopt(curl, CURLOPT_POSTFIELDS, data ? data : "");
+  }
 
-    // Perform the request
-    res = curl_easy_perform(curl);
-    if (res != CURLE_OK)
-    {
-        ERROR_PRINT("HTTP request failed: curl=%d (%s) url=%s", (int)res, curl_easy_strerror(res), full_url);
-        free(response.data);
-        curl_easy_cleanup(curl);
-        if (header_list)
-            curl_slist_free_all(header_list);
-        return XCASH_ERROR;
-    }
-
-    DEBUG_PRINT("Curl result %s", response.data);
-
-    // Validate response before copying
-    if (!response.data)
-    {
-        ERROR_PRINT("response.data is NULL");
-        free(response.data);
-        curl_easy_cleanup(curl);
-        if (header_list)
-            curl_slist_free_all(header_list);
-        return XCASH_ERROR;
-    }
-
-    size_t response_len = strlen(response.data);
-    DEBUG_PRINT("Response length: %zu", response_len);
-
-    if (response_len >= return_buffer_size)
-    {
-        ERROR_PRINT("Response data too large (%zu bytes)", response_len);
-        free(response.data);
-        curl_easy_cleanup(curl);
-        if (header_list)
-            curl_slist_free_all(header_list);
-        return XCASH_ERROR;
-    }
-
-    // Copy the response to result buffer
-    strncpy(result, response.data, return_buffer_size - 1);
-    result[return_buffer_size - 1] = '\0'; // Ensure null termination
-
-    // Cleanup
+  // Perform the request
+  res = curl_easy_perform(curl);
+  if (res == CURLE_OK) {
+    if (http_request_succeeded) *http_request_succeeded = 1;
+  } else {
+    ERROR_PRINT("HTTP request failed: curl=%d (%s) url=%s", (int)res, curl_easy_strerror(res), full_url);
     free(response.data);
     curl_easy_cleanup(curl);
     if (header_list)
-        curl_slist_free_all(header_list);
-    return XCASH_OK;
+      curl_slist_free_all(header_list);
+    return XCASH_ERROR;
+  }
+
+  DEBUG_PRINT("Curl result %s", response.data);
+
+  // Validate response before copying
+  if (!response.data) {
+    ERROR_PRINT("response.data is NULL");
+    free(response.data);
+    curl_easy_cleanup(curl);
+    if (header_list)
+      curl_slist_free_all(header_list);
+    return XCASH_ERROR;
+  }
+
+  size_t response_len = strlen(response.data);
+  DEBUG_PRINT("Response length: %zu", response_len);
+
+  if (response_len >= return_buffer_size) {
+    ERROR_PRINT("Response data too large (%zu bytes)", response_len);
+    free(response.data);
+    curl_easy_cleanup(curl);
+    if (header_list)
+      curl_slist_free_all(header_list);
+    return XCASH_ERROR;
+  }
+
+  // Copy the response to result buffer
+  strncpy(result, response.data, return_buffer_size - 1);
+  result[return_buffer_size - 1] = '\0';  // Ensure null termination
+
+  // Cleanup
+  free(response.data);
+  curl_easy_cleanup(curl);
+  if (header_list)
+    curl_slist_free_all(header_list);
+  return XCASH_OK;
 }

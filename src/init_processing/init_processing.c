@@ -33,15 +33,14 @@ bool print_starter_state(const arg_config_t *arg_config) {
           "Wallet:\t\t%s:%d\n"
           "Payouts:\t%s:%d\n"
           "MongoDB:\t%s\n"
-          "Log level:\t%d\n"
-          "Image Hash:\t%s\n",
+          "Log level:\t%d\n",
           XCASH_PAYOUTS_CURRENT_VERSION, "~Lazarus",
           xcash_wallet_public_address,
           XCASH_DAEMON_IP, XCASH_DAEMON_PORT,
           XCASH_DPOPS_IP, XCASH_DPOPS_PORT,
           XCASH_WALLET_IP, XCASH_WALLET_PORT,
           XCASH_PAYOUTS_IP, XCASH_PAYOUTS_PORT,
-          DATABASE_CONNECTION, log_level, self_sha);
+          DATABASE_CONNECTION, log_level);
 
 //
 // Checking DNSSEC records for seeds and image version using xcashpulse dns entries
