@@ -400,7 +400,7 @@ int wallet_payout_send(const char* addr, int64_t amount_atomic, const char* reas
   }
 
   // Send
-  char response[XLARGE_BUFFER_SIZE] = {0};
+  char response[BUFFER_SIZE] = {0};
   if (send_http_request(response, sizeof(response),
                         XCASH_WALLET_IP, "/json_rpc", XCASH_WALLET_PORT, "POST",
                         HTTP_HEADERS, HTTP_HEADERS_LENGTH,
@@ -427,9 +427,9 @@ int wallet_payout_send(const char* addr, int64_t amount_atomic, const char* reas
   }
 
   // Pull the three arrays once into local buffers, parse_json_data does not work on arrays
-  char tx_hash_list_buf[XLARGE_BUFFER_SIZE] = {0};
-  char fee_list_buf[XLARGE_BUFFER_SIZE] = {0};
-  char amount_list_buf[XLARGE_BUFFER_SIZE] = {0};
+  char tx_hash_list_buf[BUFFER_SIZE] = {0};
+  char fee_list_buf[BUFFER_SIZE] = {0};
+  char amount_list_buf[BUFFER_SIZE] = {0};
 
   if (json_extract_array(response, "\"tx_hash_list\"", tx_hash_list_buf, sizeof(tx_hash_list_buf)) == XCASH_ERROR) {
     ERROR_PRINT("wallet_payout_send: tx_hash_list missing");
