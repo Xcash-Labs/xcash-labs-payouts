@@ -267,8 +267,9 @@ void server_receive_payout(const char* MESSAGE) {
            "\"signature\":\"%s\"}}",
            sign_str, in_public_address, in_signature);
 
+  int http_request_succeeded = 0;
   if (send_http_request(response, sizeof(response), XCASH_WALLET_IP, "/json_rpc", XCASH_WALLET_PORT,
-   "POST", HTTP_HEADERS, HTTP_HEADERS_LENGTH, request, HTTP_TIMEOUT_SETTINGS) <= 0) {
+   "POST", HTTP_HEADERS, HTTP_HEADERS_LENGTH, request, HTTP_TIMEOUT_SETTINGS, &http_request_succeeded) <= 0) {
     ERROR_PRINT("server_receive_payout: HTTP request failed trying to check signature");
     free(parsed);
     free(sign_str);

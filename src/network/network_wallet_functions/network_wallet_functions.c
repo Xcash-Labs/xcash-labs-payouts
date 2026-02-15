@@ -16,9 +16,10 @@ int get_public_address(void)
     char data[SMALL_BUFFER_SIZE] = {0};
 
     // Send HTTP request to get the public address
+    int http_request_succeeded = 0;
     if (send_http_request(data, SMALL_BUFFER_SIZE, XCASH_WALLET_IP, "/json_rpc", XCASH_WALLET_PORT, "POST", 
                           HTTP_HEADERS, HTTP_HEADERS_LENGTH, GET_PUBLIC_ADDRESS_DATA, 
-                          HTTP_TIMEOUT_SETTINGS) <= 0) 
+                          HTTP_TIMEOUT_SETTINGS, &http_request_succeeded) <= 0) 
     {  
         ERROR_PRINT("Could not get the public address");
         return XCASH_ERROR;
@@ -75,10 +76,11 @@ int check_reserve_proofs(uint64_t vote_amount_atomic, const char* PUBLIC_ADDRESS
 
   // Send
   char response[SMALL_BUFFER_SIZE] = {0};
+  int http_request_succeeded = 0;
   if (send_http_request(response, sizeof(response),
                         XCASH_WALLET_IP, "/json_rpc", XCASH_WALLET_PORT, "POST",
                         HTTP_HEADERS, HTTP_HEADERS_LENGTH,
-                        request_payload, HTTP_TIMEOUT_SETTINGS) != XCASH_OK) {
+                        request_payload, HTTP_TIMEOUT_SETTINGS, &http_request_succeeded) != XCASH_OK) {
     ERROR_PRINT("Could not validate the reserve proof (HTTP error)");
     return XCASH_ERROR;
   }
@@ -148,7 +150,7 @@ int get_unlocked_balance(uint64_t* unlocked_balance_out)
   if (send_http_request(response, sizeof(response),
                         XCASH_WALLET_IP, "/json_rpc", XCASH_WALLET_PORT, "POST",
                         HTTP_HEADERS, HTTP_HEADERS_LENGTH,
-                        REQUEST_PAYLOAD, HTTP_TIMEOUT_SETTINGS) != XCASH_OK) {
+                        REQUEST_PAYLOAD, HTTP_TIMEOUT_SETTINGS, &http_request_succeeded) != XCASH_OK) {
     ERROR_PRINT("get_unlocked_balance: HTTP error");
     return XCASH_ERROR;
   }

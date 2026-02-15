@@ -96,8 +96,13 @@ Parameters:
 int send_http_request(char* result, size_t return_buffer_size, const char* host, const char* url, int port,
                       const char* method, const char** headers, size_t headers_length,
                       const char* data, int timeout, int* http_request_succeeded) {
-                        
-  if (http_request_succeeded) *http_request_succeeded = 0;
+
+  if (!http_request_succeeded) {
+    ERROR_PRINT("send_http_request: http_request_succeeded is NULL");
+    return XCASH_ERROR;
+  }
+  *http_request_succeeded = 0;
+
   CURL* curl;
   CURLcode res;
   struct curl_slist* header_list = NULL;
@@ -150,7 +155,7 @@ int send_http_request(char* result, size_t return_buffer_size, const char* host,
   // Perform the request
   res = curl_easy_perform(curl);
   if (res == CURLE_OK) {
-    if (http_request_succeeded) *http_request_succeeded = 1;
+    *http_request_succeeded = 1;
   } else {
     ERROR_PRINT("HTTP request failed: curl=%d (%s) url=%s", (int)res, curl_easy_strerror(res), full_url);
     free(response.data);

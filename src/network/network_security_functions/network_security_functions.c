@@ -104,9 +104,10 @@ bool sign_txt_string(const char* txt_string, char* signature_out, size_t sig_out
       "Accept: application/json"};
 
   char response[SMALL_BUFFER_SIZE];
+  int http_request_succeeded = 0;
   int http_ok = send_http_request(response, sizeof response,
                                   XCASH_WALLET_IP, "/json_rpc", XCASH_WALLET_PORT,
-                                  "POST", headers, 2, request_json, HTTP_TIMEOUT_SETTINGS);
+                                  "POST", headers, 2, request_json, HTTP_TIMEOUT_SETTINGS, &http_request_succeeded);
 
   free(request_json);
 
@@ -287,9 +288,10 @@ int verify_data(const char* message) {
            "\"signature\":\"%s\"}}",
            escaped, ck_public_address, signature);
 
+  int http_request_succeeded = 0;
   if (send_http_request(response, sizeof(response), XCASH_WALLET_IP, "/json_rpc", XCASH_WALLET_PORT,
                         "POST", HTTP_HEADERS, HTTP_HEADERS_LENGTH,
-                        request, HTTP_TIMEOUT_SETTINGS) <= 0) {
+                        request, HTTP_TIMEOUT_SETTINGS, &http_request_succeeded) <= 0) {
     ERROR_PRINT("verify_data: HTTP request failed");
     return XCASH_ERROR;
   }
@@ -351,10 +353,11 @@ int wallet_verify_signature(const char *sign_str, const char *in_public_address,
     return XCASH_ERROR;
   }
 
+  int http_request_succeeded = 0;
   int sent = send_http_request(response, sizeof(response),
                                XCASH_WALLET_IP, "/json_rpc", XCASH_WALLET_PORT,
                                "POST", HTTP_HEADERS, HTTP_HEADERS_LENGTH,
-                               request, HTTP_TIMEOUT_SETTINGS);
+                               request, HTTP_TIMEOUT_SETTINGS, &http_request_succeeded);
   if (sent <= 0) {
     return XCASH_ERROR;
   }
