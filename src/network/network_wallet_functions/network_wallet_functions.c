@@ -147,6 +147,7 @@ int get_unlocked_balance(uint64_t* unlocked_balance_out)
       "\"params\":{\"account_index\":0}}";
 
   char response[SMALL_BUFFER_SIZE] = {0};
+  int http_request_succeeded = 0;
   if (send_http_request(response, sizeof(response),
                         XCASH_WALLET_IP, "/json_rpc", XCASH_WALLET_PORT, "POST",
                         HTTP_HEADERS, HTTP_HEADERS_LENGTH,
