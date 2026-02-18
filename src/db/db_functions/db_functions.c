@@ -1395,7 +1395,7 @@ static int get_delegate_minimum_amount(int64_t *out_min_amount)
         DATABASE_NAME,
         DB_COLLECTION_DELEGATES,
         filter_json,
-        "minimum_amount",
+        "minimum_payout",
         out_min_amount) != XCASH_OK)
   {
     *out_min_amount = 0;
@@ -1437,7 +1437,7 @@ int run_payout_sweep_simple(int64_t in_unlocked_balance) {
     }
   } else {
     minimum_payout = 5000;
-    WARNING_PRINT("Failed to retrieve minimum_amount value from collection, using default");
+    WARNING_PRINT("Failed to retrieve minimum_amount from DB, using default");
   }
 
   mongoc_client_t* client = NULL;
@@ -1471,6 +1471,8 @@ int run_payout_sweep_simple(int64_t in_unlocked_balance) {
 
   // Common parameters used in both total_pending and sweep queries
   const int64_t minimum_payout_atomic = (int64_t)(minimum_payout * XCASH_ATOMIC_UNITS);
+  INFO_PRINT("payout sweep: minimum payout threshold=%" PRId64 " XCK (%" PRId64 " atomic)",
+           minimum_payout, minimum_payout_atomic);
   const int64_t now_ms = (int64_t)time(NULL) * 1000;
   const int64_t cutoff = now_ms - NO_ACTIVITY_DELETE;
 

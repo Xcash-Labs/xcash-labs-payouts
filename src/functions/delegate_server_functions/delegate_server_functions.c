@@ -291,6 +291,7 @@ void server_receive_payout(const char* MESSAGE) {
     return;
   }
 
+  INFO_PRINT("------------------------------------------------------------");
   INFO_PRINT("[PAYOUT] SEED_TO_NODES_PAYOUT VERIFIED | height=%s | delegate=%s | entries=%zu | outputs_hash=%s",
             in_block_height, in_delegate_wallet_address, entries_count, in_outputs_hash);
 
