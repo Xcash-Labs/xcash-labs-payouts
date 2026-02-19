@@ -175,7 +175,7 @@ int main(int argc, char *argv[]) {
     FATAL_ERROR_EXIT("Please enable ntp for your server");
   }
 
-  if (!get_node_data) {
+  if (!get_node_data()) {
     FATAL_ERROR_EXIT("Can't get node data");
   }
 
