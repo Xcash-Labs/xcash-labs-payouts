@@ -7,7 +7,6 @@ BRIGHT_WHITE_TEXT("General Options:\n")
 "Program Bug Address: https://github.com/Xcash-Labs/xcash-labs-dpops/issues\n"
 "\n"
 "  -h, --help                              List all valid parameters.\n"
-"  -w, --wallet-address <ADDRESS>          Set the block verifier's secret key\n"
 "\n"
 BRIGHT_WHITE_TEXT("Debug Options:\n")
 "  --log-level                             The log-level displays log messages based on the level passed:\n"
@@ -17,7 +16,6 @@ BRIGHT_WHITE_TEXT("Debug Options:\n")
 
 static struct argp_option options[] = {
   {"help", 'h', 0, 0, "List all valid parameters.", 0},
-  {"wallet-address", 'w', "ADDRESS", 0, "Set the payout wallet public address", 0},
   {"log-level", OPTION_LOG_LEVEL, "LOG_LEVEL", 0, "Displays log messages based on the level passed.", 0},
   {0}
 };
@@ -34,13 +32,6 @@ static error_t parse_opt(int key, char *arg, struct argp_state *state)
   {
     case 'h':
       cfg->show_help = true;
-      break;
-
-    case 'w':
-      if (!arg || arg[0] == '\0') {
-        return ARGP_ERR_UNKNOWN;
-      }
-      snprintf(xcash_wallet_public_address, sizeof(xcash_wallet_public_address), "%s", arg);
       break;
 
     case OPTION_LOG_LEVEL: {
@@ -182,6 +173,10 @@ int main(int argc, char *argv[]) {
     INFO_PRINT("NTP Service is Active");
   } else {
     FATAL_ERROR_EXIT("Please enable ntp for your server");
+  }
+
+  if (!get_node_data) {
+    FATAL_ERROR_EXIT("Can't get node data");
   }
 
   if (xcash_wallet_public_address[0] == '\0' || strlen(xcash_wallet_public_address) != XCASH_WALLET_LENGTH) {

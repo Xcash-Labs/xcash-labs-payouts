@@ -1025,12 +1025,12 @@ bool fetch_reserve_proof_fields_by_id(
 
 /*---------------------------------------------------------------------------------------------------------
 Name: get_delegate_fee
-Description: Retrieves `delegate_fee` (double) from the collections table for the current wallet.
+Description: Helper that retrieves `delegate_fee` (double) from the collections table for the current wallet.
 Parameters:
   out_fee - [out] Receives the delegate fee as a double (e.g., 5.0 for 5%)
 Return:  XCASH_OK (1) on success, XCASH_ERROR (0) if missing / not a double / error
 ---------------------------------------------------------------------------------------------------------*/
-int get_delegate_fee(double* out_fee) {
+static int get_delegate_fee(double* out_fee) {
   if (!out_fee) {
     ERROR_PRINT("get_delegate_fee: out_fee is NULL");
     return XCASH_ERROR;
@@ -1140,6 +1140,11 @@ int compute_payouts_due(payout_output_t* parsed, uint64_t in_block_height, int64
   if (!parsed || entries_count == 0) {
     ERROR_PRINT("No parsed entries");
     return XCASH_ERROR;
+  }
+
+  if (get_delegate_fee(&delegate_fee_percent) != XCASH_OK) {
+    WARNING_PRINT("Cound not retrieve delegate_fee from database, using default");
+    delegate_fee_percent = 5.0;
   }
 
   mongoc_client_t* client = NULL;
@@ -1259,6 +1264,11 @@ int compute_payouts_due(payout_output_t* parsed, uint64_t in_block_height, int64
 
   uint64_t send_total = sum - fee_atomic;
   sum = send_total;
+
+  INFO_PRINT("compute_payouts_due: delegate_fee=%.2f%% | delegate_keeps=%.6f XCK | stakers_receive=%.6f XCK",
+            delegate_fee_percent,
+            (double)fee_atomic / (double)XCASH_ATOMIC_UNITS,
+            (double)send_total / (double)XCASH_ATOMIC_UNITS);
 
   /* ---- Vote totals ---- */
   uint64_t total_delegate_votes = 0;

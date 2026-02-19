@@ -15,6 +15,7 @@
 #include "xcash_payouts_loop.h"
 #include "net_server.h"
 #include "init_processing.h"
+#include "node_functions.h"
 
 // Define an enum for option IDs
 typedef enum {

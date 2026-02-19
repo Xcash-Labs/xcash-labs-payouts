@@ -5,7 +5,6 @@
 
 typedef struct {
   bool show_help;
-//  char *block_verifiers_secret_key;
 } arg_config_t;
 
 // Define a struct to store network node data
