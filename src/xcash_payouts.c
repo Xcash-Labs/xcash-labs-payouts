@@ -158,9 +158,6 @@ int main(int argc, char *argv[]) {
   install_signal_handlers();
   setenv("ARGP_HELP_FMT", "rmargin=120", 1);
 
-  if (argc == 1) {
-    FATAL_ERROR_EXIT("No arguments entered. Try `xcash-dpops --help'");
-  }
   if (argp_parse(&argp, argc, argv, ARGP_NO_EXIT | ARGP_NO_ERRS, 0, &arg_config) != 0) {
     FATAL_ERROR_EXIT("Invalid option entered. Try `xcash-dpops --help'");
   }
