@@ -3,6 +3,7 @@
 bool get_node_data(void) {
   // --- Wait for wallet public address to be available (from wallet process) ---
   const int SLEEP_SEC = 5;
+  INFO_PRINT("Waitting for RPC Wallet Process to start...");
   sleep(20);  // give things a chance to start-up
   int attempt = 0;
 
