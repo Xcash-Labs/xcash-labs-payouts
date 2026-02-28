@@ -383,3 +383,9 @@ void server_receive_update_delegate_vote_count(const char* MESSAGE) {
   DEBUG_PRINT("update_delegate_vote_count: set total_vote_count=%lld for %.12s…",
               (long long)new_total, public_address);
 }
+
+
+
+void server_receive_payout_info(const char* MESSAGE) {
+
+}
