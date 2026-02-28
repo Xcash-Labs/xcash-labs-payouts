@@ -41,6 +41,6 @@ int compute_payouts_due(payout_output_t *parsed, uint64_t in_block_height, int64
 int run_payout_sweep_simple(int64_t in_unlocked_balance);
 int mark_found_blocks_processed_up_to(uint64_t height);
 bool refresh_allowed_solo_addresses(const char* db_name, const char* delegate_public_address, const solo_addr_list_t* solo_list);
-char* build_payout_info_response_json(const char* db_name, int days, size_t* out_len);
+char* build_payout_info_response_json(int days, size_t* out_len);
 
 #endif
