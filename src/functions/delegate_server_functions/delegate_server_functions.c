@@ -386,6 +386,9 @@ void server_receive_update_delegate_vote_count(const char* MESSAGE) {
 
 
 
-void server_receive_payout_info(const char* MESSAGE) {
-
+void server_receive_payout_info(server_client_t* client, const char* MESSAGE) {
+  if (!MESSAGE || !*MESSAGE) {
+    SERVER_ERROR("0|Invalid message payload");
+  }
+  
 }
