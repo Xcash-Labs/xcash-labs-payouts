@@ -2038,11 +2038,9 @@ Parameters:
   days    - Number of days of payout history to include (capped internally)
   out_len - Output parameter that receives the length of the returned JSON string
 ---------------------------------------------------------------------------------------------------------*/
-char* build_payout_info_response_json(const char* db_name, int days, size_t* out_len)
+char* build_payout_info_response_json(int days, size_t* out_len)
 {
   if (out_len) *out_len = 0;
-
-  if (!db_name || !*db_name) return NULL;
 
   if (days <= 0) days = 7;
   if (days > 30) days = 30; // safety cap
@@ -2051,7 +2049,7 @@ char* build_payout_info_response_json(const char* db_name, int days, size_t* out
   if (!client) return NULL;
 
   mongoc_collection_t* col =
-    mongoc_client_get_collection(client, db_name, DB_COLLECTION_PAYOUT_RECEIPTS);
+    mongoc_client_get_collection(client, DATABASE_NAME, DB_COLLECTION_PAYOUT_RECEIPTS);
 
   if (!col) {
     mongoc_client_pool_push(database_client_thread_pool, client);
