@@ -432,19 +432,3 @@ void server_receive_payout_info(server_client_t* client, const char* MESSAGE)
   send_data(client, (const unsigned char*)response_json, out_len);
   free(response_json);
 }
-
-
-{
-  "message_settings": "NODES_TO_NODES_PAYOUT_INFO"
-}
-
-  collection - payout_receipts
-  {
-    _id: 'dc1080812f02fdd386e09121cfcdd5e4f300ee4f899413d9677a6aaa3167b510',
-    payment_address: 'XCK1Us7LEY5MhoyDXAy1Kqb5wn7K95VvCBLQwtU8JJGv77zwe8XPSX7ERhUZHaFuwhTKc53UnpFJARaVJaJNuWDM1wKzk56wQ4',
-    amount_atomic_requested: Long("5879630929"),
-    amount_atomic_sent: Long("5879630929"),
-    tx_fee_atomic: Long("2138700"),
-    created_at: ISODate("2026-02-27T21:05:50.000Z"),
-    split_count: 0
-  }
