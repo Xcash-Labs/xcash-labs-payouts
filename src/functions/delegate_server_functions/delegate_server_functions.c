@@ -428,7 +428,6 @@ void server_receive_payout_info(server_client_t* client, const char* MESSAGE)
     SERVER_ERROR("0|Failed to build response");
   }
 
-
   send_data(client, (const unsigned char*)response_json, out_len);
   free(response_json);
 }
