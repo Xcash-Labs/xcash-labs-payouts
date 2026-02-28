@@ -384,11 +384,67 @@ void server_receive_update_delegate_vote_count(const char* MESSAGE) {
               (long long)new_total, public_address);
 }
 
-
-
-void server_receive_payout_info(server_client_t* client, const char* MESSAGE) {
+/*---------------------------------------------------------------------------------------------------------
+Name: server_receive_payout_info
+Description: Runs the code when the server receives the SEED_TO_NODES_PAYOUT_INFO message.
+  This function validates the request, then queries the payout_receipts collection and returns
+  the most recent payout transactions (default: last 7 days) back to the requesting node.
+Parameters:
+  client  - The connected client
+  MESSAGE - The message
+---------------------------------------------------------------------------------------------------------*/
+void server_receive_payout_info(server_client_t* client, const char* MESSAGE)
+{
   if (!MESSAGE || !*MESSAGE) {
     SERVER_ERROR("0|Invalid message payload");
   }
-  
+
+  cJSON* root = cJSON_Parse(MESSAGE);
+  if (!root) {
+    SERVER_ERROR("0|Invalid JSON");
+  }
+
+  const cJSON* ms = cJSON_GetObjectItemCaseSensitive(root, "message_settings");
+  const char* message_settings =
+    (cJSON_IsString(ms) && ms->valuestring && *ms->valuestring) ? ms->valuestring : NULL;
+
+  if (!message_settings) {
+    cJSON_Delete(root);
+    SERVER_ERROR("0|Missing message_settings");
+  }
+
+  if (strcmp(message_settings, "NODES_TO_NODES_PAYOUT_INFO") != 0) {
+    cJSON_Delete(root);
+    SERVER_ERROR("0|Invalid message_settings");
+  }
+
+  int days = 7;
+  cJSON_Delete(root);
+
+  size_t out_len = 0;
+  char* response_json = build_payout_info_response_json(days, &out_len);
+  if (!response_json || out_len <= 0) {
+    if (response_json) free(response_json);
+    SERVER_ERROR("0|Failed to build response");
+  }
+
+
+  send_data(client, (const unsigned char*)response_json, out_len);
+  free(response_json);
 }
+
+
+{
+  "message_settings": "NODES_TO_NODES_PAYOUT_INFO"
+}
+
+  collection - payout_receipts
+  {
+    _id: 'dc1080812f02fdd386e09121cfcdd5e4f300ee4f899413d9677a6aaa3167b510',
+    payment_address: 'XCK1Us7LEY5MhoyDXAy1Kqb5wn7K95VvCBLQwtU8JJGv77zwe8XPSX7ERhUZHaFuwhTKc53UnpFJARaVJaJNuWDM1wKzk56wQ4',
+    amount_atomic_requested: Long("5879630929"),
+    amount_atomic_sent: Long("5879630929"),
+    tx_fee_atomic: Long("2138700"),
+    created_at: ISODate("2026-02-27T21:05:50.000Z"),
+    split_count: 0
+  }

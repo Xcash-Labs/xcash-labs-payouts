@@ -2000,3 +2000,204 @@ bool refresh_allowed_solo_addresses(const char* db_name,
   mongoc_client_pool_push(database_client_thread_pool, client);
   return true;
 }
+
+static void i64_to_str(int64_t v, char* out, size_t out_sz)
+{
+  if (!out || out_sz == 0) return;
+  snprintf(out, out_sz, "%lld", (long long)v);
+}
+
+static void iso8601_from_ms_utc(int64_t ms, char* out, size_t out_sz)
+{
+  if (!out || out_sz == 0) return;
+
+  time_t sec = (time_t)(ms / 1000LL);
+  struct tm tm_utc;
+  gmtime_r(&sec, &tm_utc);
+
+  // 2026-02-27T21:05:50Z
+  strftime(out, out_sz, "%Y-%m-%dT%H:%M:%SZ", &tm_utc);
+}
+
+/*---------------------------------------------------------------------------------------------------------
+Name: build_payout_info_response_json
+Description: Builds the JSON response for the SEED_TO_NODES_PAYOUT_INFO request.
+  This function queries the payout_receipts collection for payout transactions created
+  within the specified number of days, formats the results into a JSON response, and
+  returns the serialized message ready to be sent back to the requesting node.
+
+  The response includes the message type, status, requested time window, total record
+  count, and an array of payout receipt objects sorted by newest first.
+
+Return:
+  A dynamically allocated JSON string created with cJSON_PrintUnformatted().
+  The caller is responsible for freeing the returned buffer using free().
+
+Parameters:
+  db_name - The MongoDB database name containing payout_receipts
+  days    - Number of days of payout history to include (capped internally)
+  out_len - Output parameter that receives the length of the returned JSON string
+---------------------------------------------------------------------------------------------------------*/
+char* build_payout_info_response_json(const char* db_name, int days, size_t* out_len)
+{
+  if (out_len) *out_len = 0;
+
+  if (!db_name || !*db_name) return NULL;
+
+  if (days <= 0) days = 7;
+  if (days > 30) days = 30; // safety cap
+
+  mongoc_client_t* client = mongoc_client_pool_pop(database_client_thread_pool);
+  if (!client) return NULL;
+
+  mongoc_collection_t* col =
+    mongoc_client_get_collection(client, db_name, DB_COLLECTION_PAYOUT_RECEIPTS);
+
+  if (!col) {
+    mongoc_client_pool_push(database_client_thread_pool, client);
+    return NULL;
+  }
+
+  // Build JSON root early (so we can return a structured error if needed)
+  cJSON* root = cJSON_CreateObject();
+  cJSON_AddStringToObject(root, "message_settings", "NODES_TO_NODES_PAYOUT_INFO");
+  cJSON_AddStringToObject(root, "status", "success");
+  cJSON_AddNumberToObject(root, "days", days);
+
+  cJSON* arr = cJSON_CreateArray();
+  cJSON_AddItemToObject(root, "payout_receipts", arr);
+
+  // Compute time window (ms since epoch)
+  int64_t now_ms = (int64_t)time(NULL) * 1000LL;
+  int64_t since_ms = now_ms - ((int64_t)days * 24LL * 60LL * 60LL * 1000LL);
+
+  // filter: { created_at: { $gte: since_ms } }
+  bson_t filter;
+  bson_init(&filter);
+
+  bson_t created_doc;
+  BSON_APPEND_DOCUMENT_BEGIN(&filter, "created_at", &created_doc);
+  BSON_APPEND_DATE_TIME(&created_doc, "$gte", since_ms);
+  bson_append_document_end(&filter, &created_doc);
+
+  // opts: sort {created_at:-1}, limit
+  bson_t opts;
+  bson_init(&opts);
+
+  bson_t sort_doc;
+  BSON_APPEND_DOCUMENT_BEGIN(&opts, "sort", &sort_doc);
+  BSON_APPEND_INT32(&sort_doc, "created_at", -1);
+  bson_append_document_end(&opts, &sort_doc);
+
+  // Safety cap (tune as you want)
+  BSON_APPEND_INT64(&opts, "limit", 5000);
+
+  mongoc_cursor_t* cursor = mongoc_collection_find_with_opts(col, &filter, &opts, NULL);
+  if (!cursor) {
+    cJSON_ReplaceItemInObject(root, "status", cJSON_CreateString("error"));
+    cJSON_AddStringToObject(root, "message", "query failed");
+    goto done;
+  }
+
+  const bson_t* doc = NULL;
+  int count = 0;
+
+  while (mongoc_cursor_next(cursor, &doc)) {
+    bson_iter_t it;
+
+    const char* id = NULL;
+    const char* payment_address = NULL;
+    int64_t amount_req = 0;
+    int64_t amount_sent = 0;
+    int64_t tx_fee = 0;
+    int64_t created_at_ms = 0;
+    int32_t split_count = 0;
+
+    if (bson_iter_init_find(&it, doc, "_id") && BSON_ITER_HOLDS_UTF8(&it)) {
+      id = bson_iter_utf8(&it, NULL);
+    }
+
+    if (bson_iter_init_find(&it, doc, "payment_address") && BSON_ITER_HOLDS_UTF8(&it)) {
+      payment_address = bson_iter_utf8(&it, NULL);
+    }
+
+    if (bson_iter_init_find(&it, doc, "amount_atomic_requested")) {
+      if (BSON_ITER_HOLDS_INT64(&it)) amount_req = bson_iter_int64(&it);
+      else if (BSON_ITER_HOLDS_INT32(&it)) amount_req = (int64_t)bson_iter_int32(&it);
+    }
+
+    if (bson_iter_init_find(&it, doc, "amount_atomic_sent")) {
+      if (BSON_ITER_HOLDS_INT64(&it)) amount_sent = bson_iter_int64(&it);
+      else if (BSON_ITER_HOLDS_INT32(&it)) amount_sent = (int64_t)bson_iter_int32(&it);
+    }
+
+    if (bson_iter_init_find(&it, doc, "tx_fee_atomic")) {
+      if (BSON_ITER_HOLDS_INT64(&it)) tx_fee = bson_iter_int64(&it);
+      else if (BSON_ITER_HOLDS_INT32(&it)) tx_fee = (int64_t)bson_iter_int32(&it);
+    }
+
+    if (bson_iter_init_find(&it, doc, "created_at") && BSON_ITER_HOLDS_DATE_TIME(&it)) {
+      created_at_ms = bson_iter_date_time(&it);
+    }
+
+    if (bson_iter_init_find(&it, doc, "split_count")) {
+      if (BSON_ITER_HOLDS_INT32(&it)) split_count = bson_iter_int32(&it);
+      else if (BSON_ITER_HOLDS_INT64(&it)) split_count = (int32_t)bson_iter_int64(&it);
+    }
+
+    cJSON* item = cJSON_CreateObject();
+
+    if (id) cJSON_AddStringToObject(item, "_id", id);
+    if (payment_address) cJSON_AddStringToObject(item, "payment_address", payment_address);
+
+    // atomics as strings (safe for JS/UI)
+    char buf_req[32], buf_sent[32], buf_fee[32];
+    i64_to_str(amount_req, buf_req, sizeof buf_req);
+    i64_to_str(amount_sent, buf_sent, sizeof buf_sent);
+    i64_to_str(tx_fee, buf_fee, sizeof buf_fee);
+
+    cJSON_AddStringToObject(item, "amount_atomic_requested", buf_req);
+    cJSON_AddStringToObject(item, "amount_atomic_sent", buf_sent);
+    cJSON_AddStringToObject(item, "tx_fee_atomic", buf_fee);
+
+    if (created_at_ms > 0) {
+      char ts[32];
+      iso8601_from_ms_utc(created_at_ms, ts, sizeof ts);
+      cJSON_AddStringToObject(item, "created_at", ts);
+    }
+
+    cJSON_AddNumberToObject(item, "split_count", split_count);
+
+    cJSON_AddItemToArray(arr, item);
+    count++;
+  }
+
+  // cursor error (optional but recommended)
+  {
+    bson_error_t error;
+    if (mongoc_cursor_error(cursor, &error)) {
+      cJSON_ReplaceItemInObject(root, "status", cJSON_CreateString("error"));
+      cJSON_AddStringToObject(root, "message", error.message);
+      // keep partial results
+    }
+  }
+
+  cJSON_AddNumberToObject(root, "count", count);
+
+  mongoc_cursor_destroy(cursor);
+
+done:
+  bson_destroy(&filter);
+  bson_destroy(&opts);
+
+  mongoc_collection_destroy(col);
+  mongoc_client_pool_push(database_client_thread_pool, client);
+
+  char* out = cJSON_PrintUnformatted(root);
+  cJSON_Delete(root);
+
+  if (!out) return NULL;
+
+  if (out_len) *out_len = strlen(out);
+  return out;
+}
