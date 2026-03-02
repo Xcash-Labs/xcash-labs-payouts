@@ -14,7 +14,7 @@
 #define XCASH_PROOF_OF_STAKE_BLOCK_HEIGHT 1
 #define CRYPTONOTE_DISPLAY_DECIMAL_POINT 6
 #define XCASH_ATOMIC_UNITS 1000000ULL  // 1 XCASH = 1,000,000 atomic units
-#define MAX_SIBLINGS 15
+#define MAX_SIBLINGS 256
 
 // ===================== Network Ports and IPs =====================
 #define XCASH_DAEMON_PORT 18281

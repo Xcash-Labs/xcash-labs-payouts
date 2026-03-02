@@ -402,6 +402,12 @@ int wallet_payout_send(const char* addr, int64_t amount_atomic, const char* reas
     return XCASH_ERROR;
   }
 
+
+  
+  // Timestamp
+  int64_t created_at_ms = (int64_t)time(NULL) * 1000;
+  if (created_at_ms_out) *created_at_ms_out = created_at_ms;
+
   // Send
   char response[BUFFER_SIZE] = {0};
   int http_request_succeeded = 0;
@@ -419,12 +425,7 @@ int wallet_payout_send(const char* addr, int64_t amount_atomic, const char* reas
     // Request reached wallet but response unusable → may have sent
     ERROR_PRINT("wallet_payout_send: HTTP response error but request reached wallet");
 
-    // Tell caller to assume funds may have been sent
-    if (amount_sent_out) *amount_sent_out = amount_atomic;
-    if (first_tx_hash_out && first_tx_hash_out_len)
-      snprintf(first_tx_hash_out, first_tx_hash_out_len, "unknown");
-
-    return XCASH_ERROR;
+    goto fail_uncertain;
   }
 
   response[sizeof(response) - 1] = '\0';
@@ -435,10 +436,8 @@ int wallet_payout_send(const char* addr, int64_t amount_atomic, const char* reas
       parse_json_data(response, "error.message", err_msg_buf, sizeof(err_msg_buf));
       ERROR_PRINT("wallet_payout_send: RPC error code=%s msg=%s",
                   err_code_buf, err_msg_buf[0] ? err_msg_buf : "(none)");
-      ERROR_PRINT("response=%s", response);
     } else {
       ERROR_PRINT("wallet_payout_send: RPC error (no code/message parsed)");
-      ERROR_PRINT("response=%s", response);
     }
     ERROR_PRINT("response=%s", response);
     return XCASH_ERROR;
@@ -451,40 +450,36 @@ int wallet_payout_send(const char* addr, int64_t amount_atomic, const char* reas
 
   if (json_extract_array(response, "\"tx_hash_list\"", tx_hash_list_buf, sizeof(tx_hash_list_buf)) == XCASH_ERROR) {
     ERROR_PRINT("wallet_payout_send: tx_hash_list missing");
-    return XCASH_ERROR;
+    goto fail_uncertain;
   }
   if (json_extract_array(response, "\"fee_list\"", fee_list_buf, sizeof(fee_list_buf)) == XCASH_ERROR) {
     ERROR_PRINT("wallet_payout_send: fee_list missing");
-    return XCASH_ERROR;
+    goto fail_uncertain;
   }
   if (json_extract_array(response, "\"amount_list\"", amount_list_buf, sizeof(amount_list_buf)) == XCASH_ERROR) {
     ERROR_PRINT("wallet_payout_send: amount_list missing");
-    return XCASH_ERROR;
+    goto fail_uncertain;
   }
 
   // Count txs by commas inside tx_hash_list
   int tx_count = count_items_in_array(tx_hash_list_buf);
   if (tx_count <= 0) {
     ERROR_PRINT("wallet_payout_send: tx_hash_list empty or malformed");
-    return XCASH_ERROR;
+    goto fail_uncertain;
   }
 
   // Defensive cap
-  const int MAX_SPLIT_TX = 128;
+  const int MAX_SPLIT_TX = 256;
   if (tx_count > MAX_SPLIT_TX) {
     ERROR_PRINT("wallet_payout_send: too many split txs (wallet=%d, max_supported=%d)", tx_count, MAX_SPLIT_TX);
-    return XCASH_ERROR;
+    goto fail_uncertain;
   }
-
-  // Timestamp
-  int64_t created_at_ms = (int64_t)time(NULL) * 1000;
-  if (created_at_ms_out) *created_at_ms_out = created_at_ms;
 
   // Extract first + siblings from tx_hash_list_buf
   char first_tx_hash[TRANSACTION_HASH_LENGTH + 1] = {0};
   if (extract_string_item(tx_hash_list_buf, 0, first_tx_hash, sizeof(first_tx_hash)) == XCASH_ERROR || !first_tx_hash[0]) {
     ERROR_PRINT("wallet_payout_send: failed to read first tx hash");
-    return XCASH_ERROR;
+    goto fail_uncertain;
   }
 
   size_t siblings_total  = (tx_count > 1) ? (size_t)(tx_count - 1) : 0;
@@ -494,7 +489,7 @@ int wallet_payout_send(const char* addr, int64_t amount_atomic, const char* reas
     for (int i = 1; i <= max_to_store; ++i) {
       if (extract_string_item(tx_hash_list_buf, i, txids_out[siblings_stored], TRANSACTION_HASH_LENGTH + 1) == XCASH_ERROR) {
         ERROR_PRINT("wallet_payout_send: failed to read tx_hash_list[%d]", i);
-        return XCASH_ERROR;
+        goto fail_uncertain;
       }
       ++siblings_stored;
     }
@@ -504,7 +499,7 @@ int wallet_payout_send(const char* addr, int64_t amount_atomic, const char* reas
         snprintf(first_tx_hash_out, first_tx_hash_out_len, "%s", first_tx_hash);
       ERROR_PRINT("wallet_payout_send: txids_out capacity too small (siblings_total=%zu, stored=%zu, cap=%zu)",
                   siblings_total, siblings_stored, txids_out_cap);
-      return XCASH_ERROR;
+      goto fail_uncertain;
     }
   }
 
@@ -516,11 +511,11 @@ int wallet_payout_send(const char* addr, int64_t amount_atomic, const char* reas
     uint64_t fee_i = 0, amt_i = 0;
     if (extract_uint64_item(fee_list_buf, i, &fee_i) == XCASH_ERROR) {
       ERROR_PRINT("wallet_payout_send: bad/missing fee_list[%d]", i);
-      return XCASH_ERROR;
+      goto fail_uncertain;
     }
     if (extract_uint64_item(amount_list_buf, i, &amt_i) == XCASH_ERROR) {
       ERROR_PRINT("wallet_payout_send: bad/missing amount_list[%d]", i);
-      return XCASH_ERROR;
+      goto fail_uncertain;
     }
     total_fee      += fee_i;
     total_sent_net += amt_i;
@@ -557,4 +552,18 @@ int wallet_payout_send(const char* addr, int64_t amount_atomic, const char* reas
                 (reason && reason[0]) ? reason : "(n/a)");
 
   return XCASH_OK;
+
+fail_uncertain:
+  ERROR_PRINT("wallet_payout_send: response may indicate funds were sent but parsing/validation failed");
+  ERROR_PRINT("response=%s", response);
+  // Tell caller to assume funds may have been sent
+  if (amount_sent_out) *amount_sent_out = amount_atomic;
+  // Unknowns
+  if (fee_out) *fee_out = 0;
+  if (tx_count_out) *tx_count_out = 0; // known only on success
+  if (first_tx_hash_out && first_tx_hash_out_len) {
+    snprintf(first_tx_hash_out, first_tx_hash_out_len, "unknown");
+  }
+
+  return XCASH_ERROR;
 }
