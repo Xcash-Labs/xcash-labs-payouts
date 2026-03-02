@@ -1984,7 +1984,7 @@ char* build_payout_info_response_json(int days, size_t* out_len)
 
   bson_t sort_doc;
   BSON_APPEND_DOCUMENT_BEGIN(&opts, "sort", &sort_doc);
-  BSON_APPEND_INT32(&sort_doc, "created_at", -1);
+  BSON_APPEND_INT32(&sort_doc, "created_at", 1);
   bson_append_document_end(&opts, &sort_doc);
 
   // Safety cap (tune as you want)
