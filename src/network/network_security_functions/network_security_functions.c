@@ -1,4 +1,5 @@
 #include "network_security_functions.h"
+#include <unistd.h>
 
 bool is_seed_address(const char *public_address) {
   for (size_t i = 0; network_nodes[i].seed_public_address != NULL; i++) {
@@ -387,11 +388,12 @@ dnssec_status_t dnssec_query(dnssec_ctx_t* h, const char* name, int rrtype, bool
 bool           dnssec_rr_secure(const char* name, int rrtype);
 
 *---------------------------------------------------------------------------------------------------------*/
-/* ICANN KSK DS anchors (2010:19036 and 2017:20326), same as Monero ships.    */
+/* ICANN KSK DS anchors (2010:19036, 2017:20326 and 2024:38696).              */
 static const char * const* get_builtin_ds(void) {
   static const char * const ds[] = {
     ". IN DS 19036 8 2 49AAC11D7B6F6446702E54A1607371607A1A41855200FD2CE1CDDE32F24E8FB5\n",
     ". IN DS 20326 8 2 E06D44B80B8F1D39A95C0B0D7C65D08458E880409BBC683457104237C7F8EC8D\n",
+    ". IN DS 38696 8 2 683D2D0ACB8C9B712A1948B27F741219298D0A450D612C483AF444A4C0FB2B16\n",
     NULL
   };
   return ds;
@@ -408,8 +410,11 @@ static int dnssec_add_trust_anchor(struct ub_ctx* ctx) {
 
   /* 2) Optional env/file anchors */
   const char* env = getenv("DNS_TRUST_ANCHOR");
+  if (env && *env && ub_ctx_add_ta_file(ctx, env) == 0) ++added;
+
+  /* Only add default files that exist: libunbound defers opening them, and a
+     missing trust-anchor file makes the whole validator module fail to init. */
   const char* candidates[] = {
-    (env && *env) ? env : NULL,
     "/var/lib/unbound/root.key",
     "/etc/unbound/root.key",
     "/usr/local/etc/unbound/root.key",
@@ -417,7 +422,7 @@ static int dnssec_add_trust_anchor(struct ub_ctx* ctx) {
   };
   int i;
   for (i = 0; candidates[i]; ++i) {
-    if (candidates[i] && ub_ctx_add_ta_file(ctx, candidates[i]) == 0) ++added;
+    if (access(candidates[i], R_OK) == 0 && ub_ctx_add_ta_file(ctx, candidates[i]) == 0) ++added;
   }
 
   return (added > 0) ? 0 : -1;
